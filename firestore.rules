@@ -1,0 +1,80 @@
+/**
+ * @fileoverview Firestore Security Rules for Intel.gpt application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Users can only access their own profiles and chat messages.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information.
+ * - /users/{userId}/chat_messages/{messageId}: Stores chat messages for each user.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed.
+ * - All data is private to the owning user.
+ *
+ * Denormalization for Authorization:
+ *  User IDs are included in the path for both user profiles and chat messages to avoid expensive `get()` calls in the security rules.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Defines if the user is signed in.
+     * @path n/a
+     * @allow n/a
+     * @deny n/a
+     * @principle Authentication check.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Defines if the requested user id matches the user id of the authenticated user.
+     * @path n/a
+     * @allow n/a
+     * @deny n/a
+     * @principle Authorization check.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Rules for the /users/{userId} collection.
+     * @path /users/{userId}
+     * @allow (create) - User with auth `uid: "user_abc"` can create a document at /users/user_abc
+     * @allow (get, update, delete) - User with auth `uid: "user_abc"` can get, update, and delete the document at /users/user_abc
+     * @deny (create) - User with auth `uid: "user_xyz"` cannot create a document at /users/user_abc
+     * @deny (get, update, delete) - User with auth `uid: "user_xyz"` cannot get, update, and delete the document at /users/user_abc
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/chat_messages/{messageId} collection.
+     * @path /users/{userId}/chat_messages/{messageId}
+     * @allow (create) - User with auth `uid: "user_abc"` can create a document at /users/user_abc/chat_messages/message_123
+     * @allow (get, update, delete) - User with auth `uid: "user_abc"` can get, update, and delete the document at /users/user_abc/chat_messages/message_123
+     * @deny (create) - User with auth `uid: "user_xyz"` cannot create a document at /users/user_abc/chat_messages/message_123
+     * @deny (get, update, delete) - User with auth `uid: "user_xyz"` cannot get, update, and delete the document at /users/user_abc/chat_messages/message_123
+     * @principle Enforces document ownership for all operations within a user's chat messages.
+     */
+    match /users/{userId}/chat_messages/{messageId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+  }
+}

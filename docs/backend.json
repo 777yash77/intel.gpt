@@ -1,0 +1,108 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Intel.gpt application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email"
+      ]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "Represents a single message in a chat conversation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ChatMessage entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ChatMessage)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The timestamp of the message.",
+          "format": "date-time"
+        },
+        "content": {
+          "type": "string",
+          "description": "The text content of the message."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "timestamp",
+        "content"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Access is restricted to the user themselves. Includes user 'id' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/chat_messages/{messageId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": {
+            "$ref": "#/backend/entities/ChatMessage"
+          },
+          "description": "Stores chat messages for each user. Access is restricted to the user who owns the chat messages. Includes user 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "messageId",
+              "description": "The unique identifier of the chat message."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed to support the Intel.gpt application, focusing on secure user authentication, chat functionality, and location-based lawyer search. The design emphasizes authorization independence using path-based ownership for user data and segregates data based on security requirements.\n\n*   **/users/{userId}:** Stores user profiles.  Access is restricted to the user and admins (if implemented). This leverages Path-Based Ownership, simplifying security rules.\n*   **/users/{userId}/chat_messages/{messageId}:** Stores chat messages for each user. It maintains the hierarchy ensuring only the user can access the messages.  This structure guarantees Authorization Independence, as access control is determined by the document's location within the hierarchy.\n\nThis structure supports QAPs as follows:\n\n*   **Secure List Operations:**  Listing chat messages is inherently secured by the path-based ownership.  A user can only list messages within their own `/users/{userId}/chat_messages` collection, preventing unauthorized access.\n*   **Authorization Independence:** No `get()` calls are needed in the security rules, since the user ID is derived from the path, allowing atomic operations (transactions/batches) to function correctly."
+  }
+}
