@@ -9,6 +9,18 @@ const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
 export function ChatMessage({ message }: { message: Message }) {
   const isUser = message.role === 'user';
+
+  // A simple markdown-to-html converter
+  const renderContent = (content: string) => {
+    // Basic bold, italic, and list support
+    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    content = content.replace(/- (.*?)(?=\n- |\n\n|$)/g, '<li>$1</li>');
+    content = content.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    content = content.replace(/\n/g, '<br />');
+    return { __html: content };
+  };
+
   return (
     <div
       className={cn(
@@ -31,7 +43,14 @@ export function ChatMessage({ message }: { message: Message }) {
             : 'rounded-bl-none bg-card'
         )}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        {isUser ? (
+          <p className="whitespace-pre-wrap">{message.content}</p>
+        ) : (
+          <div
+            className="prose prose-sm dark:prose-invert"
+            dangerouslySetInnerHTML={renderContent(message.content)}
+          />
+        )}
       </div>
       {isUser && (
         <Avatar className="size-10 border">

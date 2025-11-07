@@ -56,16 +56,16 @@ export function ChatInterface() {
         description:
           'Failed to get a response from the assistant. Please try again.',
       });
-      setMessages((prev) => prev.slice(0, -1));
+      setMessages((prev) => prev.slice(0, -1)); // Remove the user message on error
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative h-full">
-      <ScrollArea className="h-full" viewportRef={scrollAreaRef}>
-        <div className="container mx-auto max-w-3xl p-4 md:p-6">
+    <div className="relative flex h-full flex-col rounded-lg border bg-card shadow-sm">
+      <ScrollArea className="flex-1" viewportRef={scrollAreaRef}>
+        <div className="p-4 md:p-6">
           <div className="space-y-6">
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
@@ -82,7 +82,7 @@ export function ChatInterface() {
           </div>
         </div>
       </ScrollArea>
-      <div className="absolute bottom-0 left-0 w-full bg-background/50 p-4 backdrop-blur-sm md:p-6">
+      <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
         <div className="mx-auto max-w-3xl">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,26 +20,36 @@ interface Lawyer {
 }
 
 const mockLawyers: Lawyer[] = [
-  {
-    name: 'Smith & Associates',
-    address: '123 Main St, Anytown, USA',
-    phone: '(555) 123-4567',
-  },
-  {
-    name: 'Juris Consultants',
-    address: '456 Oak Ave, Anytown, USA',
-    phone: '(555) 987-6543',
-  },
-  {
-    name: 'Justice Law Firm',
-    address: '789 Pine Ln, Anytown, USA',
-    phone: '(555) 555-5555',
-  },
-  {
-    name: 'Legal Eagles LLP',
-    address: '101 Maple Rd, Anytown, USA',
-    phone: '(555) 111-2222',
-  },
+    {
+        name: 'Smith & Associates',
+        address: '123 Main St, Anytown, USA',
+        phone: '(555) 123-4567',
+    },
+    {
+        name: 'Juris Consultants',
+        address: '456 Oak Ave, Anytown, USA',
+        phone: '(555) 987-6543',
+    },
+    {
+        name: 'Justice Law Firm',
+        address: '789 Pine Ln, Anytown, USA',
+        phone: '(555) 555-5555',
+    },
+    {
+        name: 'Legal Eagles LLP',
+        address: '101 Maple Rd, Anytown, USA',
+        phone: '(555) 111-2222',
+    },
+    {
+        name: 'Alpha Legal Group',
+        address: '212 Birch Blvd, Anytown, USA',
+        phone: '(555) 222-3333'
+    },
+    {
+        name: 'Capital Defense',
+        address: '333 Cedar Ct, Anytown, USA',
+        phone: '(555) 444-5555'
+    }
 ];
 
 export function LawyerList() {
@@ -51,7 +61,6 @@ export function LawyerList() {
   const handleFindLawyers = () => {
     setIsLoading(true);
     setError(null);
-    setLocation(null);
 
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser.');
@@ -68,14 +77,21 @@ export function LawyerList() {
           description: 'Displaying lawyers near you.',
         });
       },
-      () => {
+      (geoError) => {
         setError(
-          'Unable to retrieve your location. Please ensure location services are enabled.'
+          `Unable to retrieve your location: ${geoError.message}. Please ensure location services are enabled.`
         );
         setIsLoading(false);
       }
     );
   };
+  
+  useEffect(() => {
+    // For demonstration, we'll immediately try to get the location.
+    // In a real app, you might want this to be user-initiated.
+    handleFindLawyers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -93,7 +109,7 @@ export function LawyerList() {
             ) : (
               <MapPin className="mr-2 h-4 w-4" />
             )}
-            Find Lawyers Near Me
+            Refresh Location
           </Button>
           {error && (
             <Alert variant="destructive" className="mt-4">
@@ -127,6 +143,17 @@ export function LawyerList() {
             ))}
           </div>
         </div>
+      )}
+
+      {isLoading && !location && (
+         <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+              <p>Finding your location...</p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -8,6 +8,7 @@ import {
   History,
   LogIn,
   MessageSquare,
+  BookText,
 } from 'lucide-react';
 
 import {
@@ -72,6 +73,18 @@ export function SidebarNav() {
               <Link href="/find-lawyer">
                 <Gavel />
                 <span>Find a Lawyer</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === '/precedents'}
+              tooltip={{ children: 'Legal Precedents', side: 'right' }}
+            >
+              <Link href="/precedents">
+                <BookText />
+                <span>Legal Precedents</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
