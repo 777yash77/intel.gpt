@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { interactWithLegalAIChatbot } from '@/ai/flows/legal-ai-chatbot';
+import { streamLegalAIChatbot } from '@/ai/flows/legal-ai-chatbot';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from './chat-message';
 import { ChatInput } from './chat-input';
@@ -34,17 +34,13 @@ export function ChatInterface() {
   const { data: firestoreMessages, isLoading: isLoadingHistory } = useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
 
   const messages = useMemo(() => {
-    if (!user) {
-      return localMessages;
-    }
     const combined = [
-      ...(firestoreMessages || []).map(m => ({ ...m, timestamp: (m.timestamp as any)?.toDate() })),
+      ...(firestoreMessages || []).map(m => ({ ...m, id: m.id, timestamp: (m.timestamp as any)?.toDate() })),
       ...localMessages.filter(lm => !(firestoreMessages || []).some(fm => fm.id === lm.id))
     ];
     combined.sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
     return combined;
-  }, [localMessages, firestoreMessages, user]);
-
+  }, [localMessages, firestoreMessages]);
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -58,53 +54,67 @@ export function ChatInterface() {
   const handleSendMessage = async (input: string) => {
     if (!input.trim() || isLoading) return;
 
+    setIsLoading(true);
+
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}`,
       role: 'user',
       content: input,
       timestamp: new Date(),
     };
     
+    setLocalMessages(prev => [...prev, userMessage]);
+    
     if (user && messagesCollectionRef) {
         addDocumentNonBlocking(messagesCollectionRef, {
             role: 'user',
             content: input,
-            timestamp: new Date(),
+            timestamp: userMessage.timestamp,
         });
-    } else {
-        setLocalMessages((prev) => [...prev, userMessage]);
     }
 
-    setIsLoading(true);
+    const assistantId = `assistant-${Date.now()}`;
+    const assistantMessage: Message = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+    };
+    setLocalMessages(prev => [...prev, assistantMessage]);
 
     try {
-      const result = await interactWithLegalAIChatbot({ query: input });
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: result.legalInsight,
-        timestamp: new Date(),
-      };
+      const stream = await streamLegalAIChatbot({ query: input });
+      let fullResponse = '';
+      for await (const chunk of stream) {
+        fullResponse += chunk;
+        setLocalMessages(prev =>
+          prev.map(msg =>
+            msg.id === assistantId ? { ...msg, content: fullResponse } : msg
+          )
+        );
+      }
       
       if (user && messagesCollectionRef) {
         addDocumentNonBlocking(messagesCollectionRef, {
             role: 'assistant',
-            content: result.legalInsight,
-            timestamp: new Date(),
+            content: fullResponse,
+            timestamp: assistantMessage.timestamp,
         });
-      } else {
-        setLocalMessages((prev) => [...prev, assistantMessage]);
       }
 
     } catch (error) {
       console.error('Error interacting with chatbot:', error);
+      const errorMsg = 'Failed to get a response from the assistant. Please try again.';
+      setLocalMessages(prev =>
+        prev.map(msg =>
+          msg.id === assistantId ? { ...msg, content: errorMsg } : msg
+        )
+      );
       toast({
         variant: 'destructive',
         title: 'Error',
-        description:
-          'Failed to get a response from the assistant. Please try again.',
+        description: errorMsg,
       });
-      // Note: We don't remove the user message on error anymore to preserve chat flow
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +123,7 @@ export function ChatInterface() {
   return (
     <div className="relative flex-1 flex flex-col h-full bg-card">
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
-        <div className="p-4 md:p-6">
+        <div className="container mx-auto max-w-4xl p-4 md:p-6">
           <div className="space-y-6">
             {(isLoadingHistory && !messages.length) && (
               <>
@@ -135,7 +145,7 @@ export function ChatInterface() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
-            {isLoading && (
+            {isLoading && localMessages[localMessages.length -1]?.role === 'user' && (
               <div className="flex items-start gap-4">
                 <Skeleton className="size-10 rounded-full" />
                 <div className="flex-1 space-y-2 max-w-[75%]">
@@ -157,7 +167,7 @@ export function ChatInterface() {
         </div>
       </ScrollArea>
       <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
-        <div className="px-4">
+        <div className="container mx-auto max-w-4xl">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
       </div>
