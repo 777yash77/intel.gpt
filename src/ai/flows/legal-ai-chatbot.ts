@@ -43,7 +43,6 @@ const legalAIChatbotFlow = ai.defineFlow(
   async input => {
     const {stream, response} = ai.generateStream({
       prompt: legalAIChatbotPrompt,
-      model: ai.getModel(),
       input: input,
     });
 
