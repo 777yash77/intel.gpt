@@ -1,14 +1,9 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { Message } from './chat-interface';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Icons } from '@/components/icons';
-import { User } from 'lucide-react';
 import { memo } from 'react';
 import { Remark } from 'react-remark';
-
-const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
-
 
 function ChatMessageComponent({ message }: { message: Message }) {
   const isUser = message.role === 'user';
@@ -48,14 +43,6 @@ function ChatMessageComponent({ message }: { message: Message }) {
           </div>
         )}
       </div>
-      {isUser && (
-         <Avatar className="size-10 border">
-           {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User" />}
-           <AvatarFallback>
-             <User className="size-5" />
-           </AvatarFallback>
-         </Avatar>
-      )}
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { addDocumentNonBlocking, useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 export type Message = {
   id: string;
@@ -56,20 +56,24 @@ export function ChatInterface() {
 
     setIsLoading(true);
 
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: input,
-      timestamp: new Date(),
-    };
-    
-    setLocalMessages(prev => [...prev, userMessage]);
+    const userMessageTimestamp = new Date();
+    const userMessageId = `user-${userMessageTimestamp.getTime()}`;
+
+    // Optimistically update UI only if user is not logged in
+    if (!user) {
+        setLocalMessages(prev => [...prev, {
+            id: userMessageId,
+            role: 'user',
+            content: input,
+            timestamp: userMessageTimestamp
+        }]);
+    }
     
     if (user && messagesCollectionRef) {
         addDocumentNonBlocking(messagesCollectionRef, {
             role: 'user',
             content: input,
-            timestamp: userMessage.timestamp,
+            timestamp: userMessageTimestamp,
         });
     }
 
@@ -78,7 +82,7 @@ export function ChatInterface() {
       id: assistantId,
       role: 'assistant',
       content: '',
-      timestamp: new Date(),
+      timestamp: new Date(userMessageTimestamp.getTime() + 1),
     };
     setLocalMessages(prev => [...prev, assistantMessage]);
 
@@ -117,6 +121,8 @@ export function ChatInterface() {
       });
     } finally {
       setIsLoading(false);
+      // Clean up thinking message
+      setLocalMessages(prev => prev.filter(msg => msg.id !== assistantId || msg.content !== ''));
     }
   };
 
