@@ -12,6 +12,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, MapPin, Phone, LocateFixed } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 
 interface Lawyer {
   name: string;
@@ -54,7 +55,7 @@ const fetchLawyers = async (city: string): Promise<Lawyer[]> => {
         setTimeout(() => {
             const lawyersWithAddress = mockLawyers.map((lawyer, i) => ({
                 ...lawyer,
-                address: `${123 + i*10} Main St, ${city}, USA`
+                address: `${123 + i*10} Main St, ${city}`
             }))
             resolve(lawyersWithAddress);
         }, 1500);
@@ -67,8 +68,13 @@ const getCityFromCoords = async (lat: number, lon: number): Promise<string> => {
     return new Promise(resolve => {
         setTimeout(() => {
             // In a real app, you would use a service like Google Maps Geocoding API.
-            // For this demo, we'll return a sample city.
-            resolve('Coimbatore');
+            // For this demo, we'll return a sample city based on coordinates.
+            // These are roughly coordinates for Coimbatore.
+            if (lat > 10 && lat < 12 && lon > 76 && lon < 78) {
+                resolve('Coimbatore');
+            } else {
+                resolve('San Francisco'); // Default fallback
+            }
         }, 500);
     });
 };
@@ -78,9 +84,36 @@ export function LawyerList() {
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [location, setLocation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [manualCity, setManualCity] = useState('');
   const { toast } = useToast();
 
-  const handleFindLawyers = () => {
+  const findAndSetLawyers = async (city: string) => {
+    try {
+        setLocation(city);
+        const fetchedLawyers = await fetchLawyers(city);
+        setLawyers(fetchedLawyers);
+
+        if (fetchedLawyers.length === 0) {
+        toast({
+            title: 'No Lawyers Found',
+            description: `No lawyers were found in ${city}.`,
+        });
+        } else {
+        toast({
+            title: 'Lawyers Found',
+            description: `Displaying lawyers in ${city}.`,
+        });
+        }
+    } catch (apiError) {
+        const err = 'Failed to fetch lawyer data.';
+        setError(err);
+        toast({ variant: 'destructive', title: 'API Error', description: err });
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
+  const handleFindLawyersByGeo = () => {
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser.');
       toast({ variant: 'destructive', title: 'Error', description: "Geolocation is not supported." });
@@ -95,30 +128,8 @@ export function LawyerList() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        try {
-          const city = await getCityFromCoords(latitude, longitude);
-          setLocation(city);
-          const fetchedLawyers = await fetchLawyers(city);
-          setLawyers(fetchedLawyers);
-
-          if (fetchedLawyers.length === 0) {
-            toast({
-              title: 'No Lawyers Found',
-              description: `No lawyers were found in ${city}.`,
-            });
-          } else {
-            toast({
-              title: 'Lawyers Found',
-              description: `Displaying lawyers in ${city}.`,
-            });
-          }
-        } catch (apiError) {
-          const err = 'Failed to fetch lawyer data.';
-          setError(err);
-          toast({ variant: 'destructive', title: 'API Error', description: err });
-        } finally {
-          setIsLoading(false);
-        }
+        const city = await getCityFromCoords(latitude, longitude);
+        await findAndSetLawyers(city);
       },
       (geoError) => {
         let errMessage = 'An unknown error occurred.';
@@ -139,6 +150,15 @@ export function LawyerList() {
       }
     );
   };
+  
+  const handleFindLawyersByCity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualCity) return;
+    setIsLoading(true);
+    setError(null);
+    setLawyers([]);
+    await findAndSetLawyers(manualCity);
+  }
 
   return (
     <div className="space-y-8">
@@ -146,18 +166,37 @@ export function LawyerList() {
         <CardHeader>
           <CardTitle>Find Local Legal Professionals</CardTitle>
           <CardDescription>
-            Use your current location to find legal professionals near you.
+            Use your current location or enter a city to find legal professionals.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-            <Button onClick={handleFindLawyers} disabled={isLoading}>
-                {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                <LocateFixed className="mr-2 h-4 w-4" />
-                )}
-                Find Lawyers Near Me
-            </Button>
+        <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Button onClick={handleFindLawyersByGeo} disabled={isLoading} className="flex-shrink-0">
+                  {isLoading && !manualCity ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                  <LocateFixed className="mr-2 h-4 w-4" />
+                  )}
+                  Find Near Me
+              </Button>
+            </div>
+             <div className="flex items-center gap-2">
+                <hr className="flex-grow" />
+                <span className="text-muted-foreground">OR</span>
+                <hr className="flex-grow" />
+            </div>
+            <form onSubmit={handleFindLawyersByCity} className="flex gap-2">
+              <Input 
+                placeholder="Enter a city name"
+                value={manualCity}
+                onChange={(e) => setManualCity(e.target.value)}
+                disabled={isLoading}
+              />
+              <Button type="submit" disabled={isLoading || !manualCity}>
+                 {isLoading && manualCity ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Search
+              </Button>
+            </form>
           {error && (
             <Alert variant="destructive" className="mt-4">
               <AlertTitle>Error</AlertTitle>
@@ -167,12 +206,12 @@ export function LawyerList() {
         </CardContent>
       </Card>
 
-      {isLoading && lawyers.length === 0 && (
+      {isLoading && (
          <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-center">
               <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              <p>Detecting your location and fetching lawyers...</p>
+              <p>Fetching lawyers...</p>
             </div>
           </CardContent>
         </Card>
@@ -206,7 +245,7 @@ export function LawyerList() {
       {!isLoading && !error && lawyers.length === 0 && location && (
         <Card>
             <CardContent className="p-6">
-                <p>No lawyers found for {location}.</p>
+                <p>No lawyers found for {location}. Try a different city.</p>
             </CardContent>
         </Card>
       )}
