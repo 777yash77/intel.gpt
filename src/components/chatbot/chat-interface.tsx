@@ -111,10 +111,13 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="relative flex-1 flex flex-col rounded-lg border bg-card shadow-sm mt-4">
+    <div className="relative flex-1 flex flex-col h-full bg-card">
+      <div className="p-4 border-b">
+        <h1 className="text-2xl font-bold">Legal Chatbot</h1>
+      </div>
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
         <div className="p-4 md:p-6">
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-4xl mx-auto">
             {(isLoadingHistory && !messages.length) && (
               <>
                 <div className="flex items-start gap-4 justify-end">
@@ -157,7 +160,7 @@ export function ChatInterface() {
         </div>
       </ScrollArea>
       <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-4xl">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
       </div>
