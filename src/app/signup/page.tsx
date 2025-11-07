@@ -21,16 +21,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useAuth } from '@/firebase';
-import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { useAuth, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import {
   setDocumentNonBlocking
-} from '@/firebase';
+} from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-import { User, createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 const formSchema = z.object({
   username: z.string().min(2, { message: 'Username must be at least 2 characters.' }),
@@ -80,10 +78,14 @@ export default function SignUpPage() {
       router.push('/');
     } catch (error: any) {
       console.error('Sign Up Error', error);
+      let errorMessage = 'An unexpected error occurred.';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already in use. Please log in or use a different email.';
+      }
       toast({
         variant: 'destructive',
         title: 'Sign Up Failed',
-        description: error.message || 'An unexpected error occurred.',
+        description: errorMessage,
       });
     }
   }
