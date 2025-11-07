@@ -123,7 +123,7 @@ export function ChatInterface() {
   return (
     <div className="relative flex-1 flex flex-col h-full bg-card">
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
-        <div className="container mx-auto max-w-4xl p-4 md:p-6">
+        <div className="container mx-auto p-4 md:p-6">
           <div className="space-y-6">
             {(isLoadingHistory && !messages.length) && (
               <>
@@ -145,14 +145,10 @@ export function ChatInterface() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
-            {isLoading && localMessages[localMessages.length -1]?.role === 'user' && (
-              <div className="flex items-start gap-4">
-                <Skeleton className="size-10 rounded-full" />
-                <div className="flex-1 space-y-2 max-w-[75%]">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              </div>
+            {isLoading && localMessages[localMessages.length -1]?.content === '' && (
+              <ChatMessage 
+                message={{ id: 'thinking', role: 'assistant', content: 'Thinking...' }} 
+              />
             )}
             {!isUserLoading && !user && messages.length === 0 && !isLoading && (
                 <div className="text-center text-muted-foreground p-8">
@@ -167,7 +163,7 @@ export function ChatInterface() {
         </div>
       </ScrollArea>
       <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
       </div>
