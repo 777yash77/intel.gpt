@@ -20,7 +20,7 @@ export type LegalAIChatbotInput = z.infer<typeof LegalAIChatbotInputSchema>;
 
 // No output schema is needed for streaming text
 export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
-  const {stream} = await legalAIChatbotFlow({
+  const stream = await legalAIChatbotFlow({
     query: input.query,
   });
 
@@ -40,18 +40,14 @@ const legalAIChatbotFlow = ai.defineFlow(
     name: 'legalAIChatbotFlow',
     inputSchema: LegalAIChatbotInputSchema,
   },
-  async input => {
-    const {stream, response} = ai.generateStream({
+  async function* (input) {
+    const {stream} = ai.generateStream({
       prompt: legalAIChatbotPrompt,
       input: input,
     });
 
-    // Wait for the full response to be generated, so we can pass it to other steps
-    const result = await response;
-
-    // You could add steps here to process the full result after streaming is complete.
-    // For example, logging or saving the response.
-
-    return {stream};
+    for await (const chunk of stream) {
+        yield chunk.text;
+    }
   }
 );
