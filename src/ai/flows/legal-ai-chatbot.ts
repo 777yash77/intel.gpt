@@ -24,7 +24,7 @@ export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
     query: input.query,
   });
 
-  return stream.stream;
+  return stream;
 }
 
 const legalAIChatbotPrompt = `You are a legal AI chatbot designed to provide clear, precise, and actionable legal intelligence.
