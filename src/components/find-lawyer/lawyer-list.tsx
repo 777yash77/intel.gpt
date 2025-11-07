@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -52,18 +52,35 @@ const mockLawyers: Lawyer[] = [
     }
 ];
 
+// A mock function to simulate fetching lawyers based on location
+const fetchLawyersNearLocation = async (coords: GeolocationCoordinates): Promise<Lawyer[]> => {
+    console.log('Fetching lawyers near:', coords.latitude, coords.longitude);
+    // In a real app, you would make an API call here.
+    // For now, we'll just return the mock data after a short delay.
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(mockLawyers);
+        }, 1500);
+    });
+};
+
+
 export function LawyerList() {
   const [isLoading, setIsLoading] = useState(false);
+  const [lawyers, setLawyers] = useState<Lawyer[]>([]);
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleFindLawyers = () => {
+  const handleFindLawyers = useCallback(() => {
     setIsLoading(true);
     setError(null);
+    setLawyers([]);
 
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
+      const err = 'Geolocation is not supported by your browser.';
+      setError(err);
+      toast({ variant: 'destructive', title: 'Error', description: err });
       setIsLoading(false);
       return;
     }
@@ -71,27 +88,36 @@ export function LawyerList() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocation(position.coords);
-        setIsLoading(false);
         toast({
           title: 'Location Found',
-          description: 'Displaying lawyers near you.',
+          description: 'Fetching lawyers near you...',
+        });
+        fetchLawyersNearLocation(position.coords).then(fetchedLawyers => {
+            setLawyers(fetchedLawyers);
+            setIsLoading(false);
+        }).catch(apiError => {
+            const err = 'Failed to fetch lawyer data.';
+            setError(err);
+            toast({ variant: 'destructive', title: 'API Error', description: err });
+            setIsLoading(false);
         });
       },
       (geoError) => {
-        setError(
-          `Unable to retrieve your location: ${geoError.message}. Please ensure location services are enabled.`
-        );
+        let errMessage = 'Unable to retrieve your location. Please ensure location services are enabled.';
+        if (geoError.code === geoError.PERMISSION_DENIED) {
+            errMessage = "Location access denied. Please enable location permissions in your browser settings to find lawyers near you."
+        }
+        setError(errMessage);
+        toast({ variant: 'destructive', title: 'Location Error', description: errMessage });
         setIsLoading(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
-  };
+  }, [toast]);
   
   useEffect(() => {
-    // For demonstration, we'll immediately try to get the location.
-    // In a real app, you might want this to be user-initiated.
     handleFindLawyers();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleFindLawyers]);
 
   return (
     <div className="space-y-8">
@@ -99,7 +125,7 @@ export function LawyerList() {
         <CardHeader>
           <CardTitle>Local Legal Professionals</CardTitle>
           <CardDescription>
-            Find legal professionals near your location.
+            Find legal professionals near your current location.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,7 +135,7 @@ export function LawyerList() {
             ) : (
               <MapPin className="mr-2 h-4 w-4" />
             )}
-            Refresh Location
+            {location ? 'Refresh Location' : 'Find Lawyers Near Me'}
           </Button>
           {error && (
             <Alert variant="destructive" className="mt-4">
@@ -120,11 +146,22 @@ export function LawyerList() {
         </CardContent>
       </Card>
 
-      {location && (
+      {isLoading && lawyers.length === 0 && (
+         <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+              <p>Finding your location and fetching lawyers...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && lawyers.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">Lawyers Near You</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            {mockLawyers.map((lawyer, index) => (
+            {lawyers.map((lawyer, index) => (
               <Card key={index}>
                 <CardHeader>
                   <CardTitle>{lawyer.name}</CardTitle>
@@ -144,15 +181,12 @@ export function LawyerList() {
           </div>
         </div>
       )}
-
-      {isLoading && !location && (
-         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-center">
-              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              <p>Finding your location...</p>
-            </div>
-          </CardContent>
+      
+      {!isLoading && !error && lawyers.length === 0 && location && (
+        <Card>
+            <CardContent className="p-6">
+                <p>No lawyers found near your location. You can try refreshing.</p>
+            </CardContent>
         </Card>
       )}
     </div>

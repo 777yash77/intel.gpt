@@ -1,19 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   FileText,
   Gavel,
   History,
   LogIn,
+  LogOut,
   MessageSquare,
   BookText,
+  UserPlus,
 } from 'lucide-react';
 
 import {
   SidebarHeader,
-  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarMenu,
@@ -22,9 +23,35 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout Error', error);
+      toast({
+        variant: 'destructive',
+        title: 'Logout Failed',
+        description: 'Could not log you out. Please try again.',
+      });
+    }
+  };
+
   return (
     <>
       <SidebarHeader className="p-4">
@@ -76,7 +103,7 @@ export function SidebarNav() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-           <SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={pathname === '/precedents'}
@@ -88,35 +115,64 @@ export function SidebarNav() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === '/history'}
-              tooltip={{ children: 'Chat History', side: 'right' }}
-            >
-              <Link href="/history">
-                <History />
-                <span>Chat History</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {user && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/history'}
+                tooltip={{ children: 'Chat History', side: 'right' }}
+              >
+                <Link href="/history">
+                  <History />
+                  <span>Chat History</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarContent>
 
       <SidebarFooter className="p-4">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === '/login'}
-              tooltip={{ children: 'Login', side: 'right' }}
-            >
-              <Link href="/login">
-                <LogIn />
-                <span>Login</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {!isUserLoading && !user && (
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/login'}
+                  tooltip={{ children: 'Login', side: 'right' }}
+                >
+                  <Link href="/login">
+                    <LogIn />
+                    <span>Login</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/signup'}
+                  tooltip={{ children: 'Sign Up', side: 'right' }}
+                >
+                  <Link href="/signup">
+                    <UserPlus />
+                    <span>Sign Up</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          )}
+          {user && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleLogout}
+                tooltip={{ children: 'Logout', side: 'right' }}
+              >
+                <LogOut />
+                <span>Logout</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarFooter>
     </>

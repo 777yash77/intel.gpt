@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,25 +22,34 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useAuth } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import {
+  setDocumentNonBlocking
+} from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { User, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const formSchema = z.object({
+  username: z.string().min(2, { message: 'Username must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      username: '',
       email: '',
       password: '',
     },
@@ -49,17 +57,32 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      initiateEmailSignIn(auth, values.email, values.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      const user = userCredential.user;
+
+      if (user) {
+        const userRef = doc(firestore, 'users', user.uid);
+        setDocumentNonBlocking(userRef, {
+            username: values.username,
+            email: values.email,
+            id: user.uid,
+        }, { merge: true });
+      }
+
       toast({
-        title: 'Login Successful',
-        description: "You've been successfully logged in.",
+        title: 'Sign Up Successful',
+        description: "Your account has been created.",
       });
       router.push('/');
     } catch (error: any) {
-      console.error('Login Error', error);
+      console.error('Sign Up Error', error);
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Sign Up Failed',
         description: error.message || 'An unexpected error occurred.',
       });
     }
@@ -69,9 +92,9 @@ export default function LoginPage() {
     <div className="flex min-h-dvh items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Sign Up</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your information to create an account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -79,17 +102,25 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
               <FormField
                 control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem className="grid gap-2">
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="m@example.com"
-                        {...field}
-                      />
+                      <Input placeholder="m@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -100,31 +131,23 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <div className="flex items-center">
-                      <Label htmlFor="password">Password</Label>
-                      <Link
-                        href="#"
-                        className="ml-auto inline-block text-sm underline"
-                      >
-                        Forgot your password?
-                      </Link>
-                    </div>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input id="password" type="password" {...field} />
+                      <Input type="password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <Button type="submit" className="w-full">
-                Login
+                Create an account
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="underline">
-              Sign up
+            Already have an account?{' '}
+            <Link href="/login" className="underline">
+              Login
             </Link>
           </div>
         </CardContent>

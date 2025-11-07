@@ -1,24 +1,49 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { interactWithLegalAIChatbot } from '@/ai/flows/legal-ai-chatbot';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from './chat-message';
 import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { addDocumentNonBlocking, useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  timestamp?: Date;
 };
 
 export function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const viewportRef = useRef<HTMLDivElement>(null);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const messagesCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'chat_messages');
+  }, [firestore, user]);
+
+  const { data: firestoreMessages, isLoading: isLoadingHistory } = useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
+
+  const messages = useMemo(() => {
+    if (!user) {
+      return localMessages;
+    }
+    const combined = [
+      ...(firestoreMessages || []).map(m => ({ ...m, timestamp: (m.timestamp as any)?.toDate() })),
+      ...localMessages.filter(lm => !(firestoreMessages || []).some(fm => fm.id === lm.id))
+    ];
+    combined.sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
+    return combined;
+  }, [localMessages, firestoreMessages, user]);
+
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -36,8 +61,19 @@ export function ChatInterface() {
       id: Date.now().toString(),
       role: 'user',
       content: input,
+      timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    
+    if (user && messagesCollectionRef) {
+        addDocumentNonBlocking(messagesCollectionRef, {
+            role: 'user',
+            content: input,
+            timestamp: new Date(),
+        });
+    } else {
+        setLocalMessages((prev) => [...prev, userMessage]);
+    }
+
     setIsLoading(true);
 
     try {
@@ -46,8 +82,19 @@ export function ChatInterface() {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: result.legalInsight,
+        timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      
+      if (user && messagesCollectionRef) {
+        addDocumentNonBlocking(messagesCollectionRef, {
+            role: 'assistant',
+            content: result.legalInsight,
+            timestamp: new Date(),
+        });
+      } else {
+        setLocalMessages((prev) => [...prev, assistantMessage]);
+      }
+
     } catch (error) {
       console.error('Error interacting with chatbot:', error);
       toast({
@@ -56,28 +103,54 @@ export function ChatInterface() {
         description:
           'Failed to get a response from the assistant. Please try again.',
       });
-      setMessages((prev) => prev.slice(0, -1)); // Remove the user message on error
+      // Note: We don't remove the user message on error anymore to preserve chat flow
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative flex h-full flex-col rounded-lg border bg-card shadow-sm">
+    <div className="relative flex-1 flex flex-col rounded-lg border bg-card shadow-sm mt-4">
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
         <div className="p-4 md:p-6">
           <div className="space-y-6">
+            {(isLoadingHistory && !messages.length) && (
+              <>
+                <div className="flex items-start gap-4 justify-end">
+                    <div className="flex-1 space-y-2 max-w-[75%]">
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                    <Skeleton className="size-10 rounded-full" />
+                </div>
+                <div className="flex items-start gap-4">
+                  <Skeleton className="size-10 rounded-full" />
+                  <div className="flex-1 space-y-2 max-w-[75%]">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                </div>
+              </>
+            )}
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
             {isLoading && (
               <div className="flex items-start gap-4">
                 <Skeleton className="size-10 rounded-full" />
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-2 max-w-[75%]">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-12 w-full" />
                 </div>
               </div>
+            )}
+            {!isUserLoading && !user && messages.length === 0 && (
+                <div className="text-center text-muted-foreground p-8">
+                    <p>
+                        <Link href="/login" className="underline text-primary">Log in</Link> or{' '}
+                        <Link href="/signup" className="underline text-primary">sign up</Link>
+                        {' '}to save your chat history.
+                    </p>
+                </div>
             )}
           </div>
         </div>
