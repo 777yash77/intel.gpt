@@ -54,53 +54,52 @@ export default function SignUpPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    createUserWithEmailAndPassword(
-      auth,
-      values.email,
-      values.password
-    )
-    .then(userCredential => {
-        const user = userCredential.user;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      const user = userCredential.user;
 
-        if (user) {
-            const userRef = doc(firestore, 'users', user.uid);
-            setDocumentNonBlocking(userRef, {
-                username: values.username,
-                email: values.email,
-                id: user.uid,
-            }, { merge: true });
-        }
+      if (user) {
+        const userRef = doc(firestore, 'users', user.uid);
+        setDocumentNonBlocking(userRef, {
+          username: values.username,
+          email: values.email,
+          id: user.uid,
+        }, { merge: true });
+      }
 
-        toast({
-            title: 'Sign Up Successful',
-            description: "Your account has been created.",
-        });
-        router.push('/');
-    })
-    .catch (error => {
+      toast({
+        title: 'Sign Up Successful',
+        description: "Your account has been created.",
+      });
+      router.push('/');
+    } catch (error: any) {
       console.error('Sign Up Error', error);
       let errorMessage = 'An unexpected error occurred.';
-        if (error.code) {
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    errorMessage = 'This email is already in use. Please log in or use a different email.';
-                    break;
-                case 'auth/weak-password':
-                    errorMessage = 'The password is too weak. Please use at least 6 characters.';
-                    break;
-                case 'auth/invalid-email':
-                    errorMessage = 'Please enter a valid email address.';
-                    break;
-                default:
-                    errorMessage = 'An error occurred during sign up. Please try again.';
-            }
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'This email is already in use. Please log in or use a different email.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'The password is too weak. Please use at least 6 characters.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          default:
+            errorMessage = 'An error occurred during sign up. Please try again.';
         }
+      }
       toast({
         variant: 'destructive',
         title: 'Sign Up Failed',
         description: errorMessage,
       });
-    });
+    }
   }
 
   return (
