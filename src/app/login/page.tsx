@@ -48,25 +48,37 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      toast({
-        title: 'Login Successful',
-        description: "You've been successfully logged in.",
+    signInWithEmailAndPassword(auth, values.email, values.password)
+      .then((userCredential) => {
+        toast({
+          title: 'Login Successful',
+          description: "You've been successfully logged in.",
+        });
+        router.push('/');
+      })
+      .catch((error) => {
+        console.error('Login Error', error);
+        let errorMessage = 'An unexpected error occurred.';
+        if (error.code) {
+            switch (error.code) {
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                case 'auth/invalid-credential':
+                    errorMessage = 'Invalid email or password. Please try again.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Please enter a valid email address.';
+                    break;
+                default:
+                    errorMessage = 'An error occurred during login. Please try again.';
+            }
+        }
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: errorMessage,
+        });
       });
-      router.push('/');
-    } catch (error: any) {
-      console.error('Login Error', error);
-      let errorMessage = 'An unexpected error occurred.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid email or password. Please try again.';
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: errorMessage,
-      });
-    }
   }
 
   return (
