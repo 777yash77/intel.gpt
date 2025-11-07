@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { interactWithLegalAIChatbot } from '@/ai/flows/legal-ai-chatbot';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from './chat-message';
