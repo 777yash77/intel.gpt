@@ -112,9 +112,6 @@ export function ChatInterface() {
 
   return (
     <div className="relative flex-1 flex flex-col h-full bg-card">
-      <div className="p-4 border-b">
-        <h1 className="text-2xl font-bold">Legal Chatbot</h1>
-      </div>
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
         <div className="p-4 md:p-6">
           <div className="space-y-6 max-w-4xl mx-auto">
@@ -147,7 +144,7 @@ export function ChatInterface() {
                 </div>
               </div>
             )}
-            {!isUserLoading && !user && messages.length === 0 && (
+            {!isUserLoading && !user && messages.length === 0 && !isLoading && (
                 <div className="text-center text-muted-foreground p-8">
                     <p>
                         <Link href="/login" className="underline text-primary">Log in</Link> or{' '}

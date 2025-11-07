@@ -8,7 +8,9 @@ export default function Home() {
     <div className="flex h-dvh flex-col">
       <Header title="Intelligent Chat" />
       <main className="flex-1 overflow-hidden">
-        <ChatInterface />
+        <div className="h-full w-full">
+          <ChatInterface />
+        </div>
       </main>
     </div>
   );
