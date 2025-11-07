@@ -20,7 +20,7 @@ export type LegalAIChatbotInput = z.infer<typeof LegalAIChatbotInputSchema>;
 
 // No output schema is needed for streaming text
 export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
-  const {stream} = legalAIChatbotFlow({
+  const {stream} = await legalAIChatbotFlow({
     query: input.query,
   });
 
