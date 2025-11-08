@@ -9,7 +9,7 @@ import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { addDocumentNonBlocking, useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 
 export type Message = {
   id: string;
@@ -34,13 +34,24 @@ export function ChatInterface() {
   const { data: firestoreMessages, isLoading: isLoadingHistory } = useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
 
   const messages = useMemo(() => {
-    const combined = [
-      ...(firestoreMessages || []).map(m => ({ ...m, id: m.id, timestamp: (m.timestamp as any)?.toDate() })),
-      ...localMessages.filter(lm => !(firestoreMessages || []).some(fm => fm.id === lm.id))
-    ];
+    // Convert Firestore messages, ensuring timestamp is a Date object
+    const fsMessages = (firestoreMessages || []).map(m => ({
+      ...m,
+      id: m.id,
+      timestamp: (m.timestamp as any)?.toDate ? (m.timestamp as any).toDate() : new Date(m.timestamp as any)
+    }));
+
+    // Filter local messages to only include those not yet present in Firestore
+    const uniqueLocalMessages = localMessages.filter(lm => !fsMessages.some(fm => fm.id === lm.id));
+
+    const combined = [...fsMessages, ...uniqueLocalMessages];
+    
+    // Sort all messages by timestamp
     combined.sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
+    
     return combined;
   }, [localMessages, firestoreMessages]);
+
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -49,7 +60,7 @@ export function ChatInterface() {
         behavior: 'smooth',
       });
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSendMessage = async (input: string) => {
     if (!input.trim() || isLoading) return;
@@ -57,18 +68,18 @@ export function ChatInterface() {
     setIsLoading(true);
   
     const userMessageTimestamp = new Date();
-  
-    // Add user message optimistically
-    const userMessage: Message = {
-      id: `local-user-${userMessageTimestamp.getTime()}`,
-      role: 'user',
-      content: input,
-      timestamp: userMessageTimestamp,
-    };
-    setLocalMessages((prev) => [...prev, userMessage]);
-  
-    // Save to Firestore if logged in
-    if (user && messagesCollectionRef) {
+    
+    // If user is not logged in, we manage messages locally
+    if (!user) {
+        const userMessage: Message = {
+            id: `local-user-${userMessageTimestamp.getTime()}`,
+            role: 'user',
+            content: input,
+            timestamp: userMessageTimestamp,
+        };
+        setLocalMessages((prev) => [...prev, userMessage]);
+    } else if (messagesCollectionRef) {
+      // If logged in, save to Firestore. `useCollection` will handle the UI update.
       addDocumentNonBlocking(messagesCollectionRef, {
         role: 'user',
         content: input,
@@ -81,10 +92,9 @@ export function ChatInterface() {
     const assistantMessage: Message = {
       id: assistantId,
       role: 'assistant',
-      content: '', // Start with empty content
+      content: '',
       timestamp: new Date(userMessageTimestamp.getTime() + 1),
     };
-    // Add assistant's placeholder message
     setLocalMessages((prev) => [...prev, assistantMessage]);
   
     try {
@@ -92,7 +102,6 @@ export function ChatInterface() {
       let fullResponse = '';
       for await (const chunk of stream) {
         fullResponse += chunk;
-        // Update the content of the assistant's message in the local state as it streams in
         setLocalMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantId ? { ...msg, content: fullResponse } : msg
@@ -100,7 +109,6 @@ export function ChatInterface() {
         );
       }
   
-      // Once streaming is complete, save the full response to Firestore
       if (user && messagesCollectionRef) {
         addDocumentNonBlocking(messagesCollectionRef, {
           role: 'assistant',
@@ -109,9 +117,10 @@ export function ChatInterface() {
         });
       }
   
-      // Clean up local optimistic messages now that they are in firestore
+      // If user is logged in, we can now remove the local version of the assistant's message,
+      // as it will be replaced by the one from Firestore.
       if (user) {
-        setLocalMessages(prev => prev.filter(m => m.id !== userMessage.id && m.id !== assistantId));
+        setLocalMessages(prev => prev.filter(m => m.id !== assistantId));
       }
   
     } catch (error) {
@@ -157,10 +166,10 @@ export function ChatInterface() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
-            {isLoading && localMessages.find(m => m.role === 'assistant')?.content === '' && (
-              <ChatMessage 
-                message={{ id: 'thinking', role: 'assistant', content: 'Thinking...' }} 
-              />
+            {isLoading && !messages.find(m => m.role === 'assistant' && m.content) && (
+                 <ChatMessage 
+                    message={{ id: 'thinking', role: 'assistant', content: 'Thinking...' }} 
+                 />
             )}
             {!isUserLoading && !user && messages.length === 0 && !isLoading && (
                 <div className="text-center text-muted-foreground p-8">
