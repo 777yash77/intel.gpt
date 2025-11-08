@@ -37,7 +37,7 @@ function ChatMessageComponent({ message }: { message: Message }) {
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div
-            className="prose prose-sm dark:prose-invert"
+            className="prose prose-sm dark:prose-invert max-w-none"
           >
             <Remark>{message.content}</Remark>
           </div>

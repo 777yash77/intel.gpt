@@ -27,13 +27,13 @@ export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
   return stream;
 }
 
-const legalAIChatbotPrompt = `You are a legal AI chatbot designed to provide clear, precise, and actionable legal intelligence.
-  Format your response using Markdown, including headings, lists, and bold text for clarity.
-  Also, provide some context on past cases or legal history relevant to the query.
+const legalAIChatbotPrompt = `You are a legal AI assistant named Intel.gpt. Your goal is to provide clear, precise, and actionable legal intelligence.
+- Answer the user's query directly.
+- Format your response using Markdown (headings, bold, lists) for clarity.
+- When relevant, provide context on past cases or legal history.
 
-  User Query: {{{query}}}
-
-  Legal Insight:`;
+USER QUERY:
+{{{query}}}`;
 
 const legalAIChatbotFlow = ai.defineFlow(
   {
@@ -42,7 +42,9 @@ const legalAIChatbotFlow = ai.defineFlow(
   },
   async function* (input) {
     const {stream} = ai.generateStream({
-      prompt: legalAIChatbotPrompt,
+      prompt: {
+        text: legalAIChatbotPrompt
+      },
       input: input,
     });
 

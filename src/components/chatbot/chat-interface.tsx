@@ -53,64 +53,72 @@ export function ChatInterface() {
 
   const handleSendMessage = async (input: string) => {
     if (!input.trim() || isLoading) return;
-
+  
     setIsLoading(true);
-
+  
     const userMessageTimestamp = new Date();
-    const userMessageId = `user-${userMessageTimestamp.getTime()}`;
-
-    // Optimistically update UI only if user is not logged in
-    if (!user) {
-        setLocalMessages(prev => [...prev, {
-            id: userMessageId,
-            role: 'user',
-            content: input,
-            timestamp: userMessageTimestamp
-        }]);
-    }
-    
+  
+    // Add user message optimistically
+    const userMessage: Message = {
+      id: `local-user-${userMessageTimestamp.getTime()}`,
+      role: 'user',
+      content: input,
+      timestamp: userMessageTimestamp,
+    };
+    setLocalMessages((prev) => [...prev, userMessage]);
+  
+    // Save to Firestore if logged in
     if (user && messagesCollectionRef) {
-        addDocumentNonBlocking(messagesCollectionRef, {
-            role: 'user',
-            content: input,
-            timestamp: userMessageTimestamp,
-        });
+      addDocumentNonBlocking(messagesCollectionRef, {
+        role: 'user',
+        content: input,
+        timestamp: userMessageTimestamp,
+      });
     }
-
+  
+    // Prepare for assistant's response
     const assistantId = `assistant-${Date.now()}`;
     const assistantMessage: Message = {
       id: assistantId,
       role: 'assistant',
-      content: '',
+      content: '', // Start with empty content
       timestamp: new Date(userMessageTimestamp.getTime() + 1),
     };
-    setLocalMessages(prev => [...prev, assistantMessage]);
-
+    // Add assistant's placeholder message
+    setLocalMessages((prev) => [...prev, assistantMessage]);
+  
     try {
       const stream = await streamLegalAIChatbot({ query: input });
       let fullResponse = '';
       for await (const chunk of stream) {
         fullResponse += chunk;
-        setLocalMessages(prev =>
-          prev.map(msg =>
+        // Update the content of the assistant's message in the local state as it streams in
+        setLocalMessages((prev) =>
+          prev.map((msg) =>
             msg.id === assistantId ? { ...msg, content: fullResponse } : msg
           )
         );
       }
-      
+  
+      // Once streaming is complete, save the full response to Firestore
       if (user && messagesCollectionRef) {
         addDocumentNonBlocking(messagesCollectionRef, {
-            role: 'assistant',
-            content: fullResponse,
-            timestamp: assistantMessage.timestamp,
+          role: 'assistant',
+          content: fullResponse,
+          timestamp: assistantMessage.timestamp,
         });
       }
-
+  
+      // Clean up local optimistic messages now that they are in firestore
+      if (user) {
+        setLocalMessages(prev => prev.filter(m => m.id !== userMessage.id && m.id !== assistantId));
+      }
+  
     } catch (error) {
       console.error('Error interacting with chatbot:', error);
       const errorMsg = 'Failed to get a response from the assistant. Please try again.';
-      setLocalMessages(prev =>
-        prev.map(msg =>
+      setLocalMessages((prev) =>
+        prev.map((msg) =>
           msg.id === assistantId ? { ...msg, content: errorMsg } : msg
         )
       );
@@ -121,8 +129,6 @@ export function ChatInterface() {
       });
     } finally {
       setIsLoading(false);
-      // Clean up thinking message
-      setLocalMessages(prev => prev.filter(msg => msg.id !== assistantId || msg.content !== ''));
     }
   };
 
@@ -151,7 +157,7 @@ export function ChatInterface() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
-            {isLoading && localMessages[localMessages.length -1]?.content === '' && (
+            {isLoading && localMessages.find(m => m.role === 'assistant')?.content === '' && (
               <ChatMessage 
                 message={{ id: 'thinking', role: 'assistant', content: 'Thinking...' }} 
               />
