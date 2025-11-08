@@ -9,13 +9,24 @@ import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { addDocumentNonBlocking, useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 export type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp?: any;
+};
+
+// Helper to get milliseconds from either a Firestore Timestamp or a JS Date
+const getTimestampMillis = (timestamp: any): number => {
+  if (timestamp instanceof Timestamp) {
+    return timestamp.toMillis();
+  }
+  if (timestamp instanceof Date) {
+    return timestamp.getTime();
+  }
+  return 0; // Fallback for null/undefined or other types
 };
 
 export function ChatInterface() {
@@ -40,8 +51,7 @@ export function ChatInterface() {
       timestamp: m.timestamp
     }));
   
-    // Combine and filter duplicates. A message is a duplicate if another message with the same role and content exists.
-    // This is a simple way to handle the optimistic UI update vs. Firestore update.
+    // Combine and filter duplicates.
     const combined = [...fsMessages, ...localMessages];
     const uniqueMessages = combined.reduce((acc, current) => {
       if (!acc.some(item => item.id === current.id)) {
@@ -51,7 +61,7 @@ export function ChatInterface() {
     }, [] as Message[]);
     
     // Sort all messages by timestamp
-    uniqueMessages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+    uniqueMessages.sort((a, b) => getTimestampMillis(a.timestamp) - getTimestampMillis(b.timestamp));
     
     return uniqueMessages;
   }, [localMessages, firestoreMessages]);
