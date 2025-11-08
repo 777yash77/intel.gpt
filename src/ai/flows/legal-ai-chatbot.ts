@@ -19,9 +19,7 @@ const LegalAIChatbotInputSchema = z.object({
 export type LegalAIChatbotInput = z.infer<typeof LegalAIChatbotInputSchema>;
 
 export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
-  const {stream} = await legalAIChatbotFlow(input);
-
-  return stream;
+  return legalAIChatbotFlow(input);
 }
 
 const legalAIChatbotPrompt = `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
