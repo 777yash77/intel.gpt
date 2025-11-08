@@ -24,7 +24,7 @@ export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
 
 const legalAIChatbotPrompt = ai.definePrompt({
   name: 'legalAIChatbotPrompt',
-  input: { schema: LegalAIChatbotInputSchema }, // Correctly define the input schema here
+  input: { schema: LegalAIChatbotInputSchema },
   prompt: `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
 
 You MUST adopt the persona of a helpful expert and strictly adhere to the following formatting and content requirements.
@@ -64,7 +64,7 @@ const legalAIChatbotFlow = ai.defineFlow(
   async (input) => {
     const { stream } = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
-      input, // Pass the whole input object
+      input,
     });
     
     const textStream = new ReadableStream({
