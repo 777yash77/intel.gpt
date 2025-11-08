@@ -55,13 +55,26 @@ const legalAIChatbotFlow = ai.defineFlow(
   {
     name: 'legalAIChatbotFlow',
     inputSchema: LegalAIChatbotInputSchema,
+    outputSchema: z.string(),
   },
   async (input) => {
-    const {stream} = await ai.generateStream({
+    const { stream } = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
       input: input,
     });
     
-    return stream;
+    // The stream provides chunks with a `text` property. We need to create a new
+    // stream that only yields the text content to avoid serialization issues
+    // when passing the data from a Server Component to a Client Component.
+    const textStream = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of stream) {
+          controller.enqueue(chunk.text);
+        }
+        controller.close();
+      },
+    });
+
+    return textStream;
   }
 );
