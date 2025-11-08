@@ -57,10 +57,10 @@ const legalAIChatbotFlow = ai.defineFlow(
     inputSchema: LegalAIChatbotInputSchema,
     outputSchema: z.string(),
   },
-  async (input) => {
+  async ({ query }) => {
     const { stream } = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
-      input: input,
+      input: { query },
     });
     
     // The stream provides chunks with a `text` property. We need to create a new
