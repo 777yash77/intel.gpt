@@ -8,7 +8,8 @@ import { Remark } from 'react-remark';
 function ChatMessageComponent({ message }: { message: Message }) {
   const isUser = message.role === 'user';
   
-  const isThinking = message.id === 'thinking';
+  // The assistant message is "thinking" if it's the assistant's turn but there's no content yet.
+  const isThinking = message.role === 'assistant' && !message.content;
 
   return (
     <div
@@ -26,7 +27,7 @@ function ChatMessageComponent({ message }: { message: Message }) {
       )}
       <div
         className={cn(
-          'max-w-[75%] rounded-lg p-3 text-sm shadow-sm',
+          'max-w-[85%] rounded-lg p-3 text-sm shadow-sm md:max-w-[75%]',
           isUser
             ? 'rounded-br-none bg-primary text-primary-foreground'
             : 'rounded-bl-none bg-card',
@@ -35,6 +36,8 @@ function ChatMessageComponent({ message }: { message: Message }) {
       >
         {isUser ? (
           <p className="whitespace-pre-wrap">{message.content}</p>
+        ) : isThinking ? (
+            <p className='text-muted-foreground'>Intel.gpt is thinking...</p>
         ) : (
           <div
             className="prose prose-sm dark:prose-invert max-w-none"

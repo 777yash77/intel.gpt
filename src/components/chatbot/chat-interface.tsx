@@ -9,13 +9,13 @@ import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { addDocumentNonBlocking, useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 export type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp?: Date;
+  timestamp?: any;
 };
 
 export function ChatInterface() {
@@ -34,22 +34,26 @@ export function ChatInterface() {
   const { data: firestoreMessages, isLoading: isLoadingHistory } = useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
 
   const messages = useMemo(() => {
-    // Convert Firestore messages, ensuring timestamp is a Date object
     const fsMessages = (firestoreMessages || []).map(m => ({
       ...m,
       id: m.id,
-      timestamp: (m.timestamp as any)?.toDate ? (m.timestamp as any).toDate() : new Date(m.timestamp as any)
+      timestamp: m.timestamp
     }));
-
-    // Filter local messages to only include those not yet present in Firestore
-    const uniqueLocalMessages = localMessages.filter(lm => !fsMessages.some(fm => fm.id === lm.id));
-
-    const combined = [...fsMessages, ...uniqueLocalMessages];
+  
+    // Combine and filter duplicates. A message is a duplicate if another message with the same role and content exists.
+    // This is a simple way to handle the optimistic UI update vs. Firestore update.
+    const combined = [...fsMessages, ...localMessages];
+    const uniqueMessages = combined.reduce((acc, current) => {
+      if (!acc.some(item => item.id === current.id)) {
+        acc.push(current);
+      }
+      return acc;
+    }, [] as Message[]);
     
     // Sort all messages by timestamp
-    combined.sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
+    uniqueMessages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
     
-    return combined;
+    return uniqueMessages;
   }, [localMessages, firestoreMessages]);
 
 
@@ -66,35 +70,39 @@ export function ChatInterface() {
     if (!input.trim() || isLoading) return;
   
     setIsLoading(true);
-  
-    const userMessageTimestamp = new Date();
     
-    // If user is not logged in, we manage messages locally
+    const userMessageTimestamp = serverTimestamp();
+    const tempUserMessageId = `local-user-${Date.now()}`;
+
+    const userMessage: Message = {
+        id: tempUserMessageId,
+        role: 'user',
+        content: input,
+        timestamp: new Date(), // Temporary timestamp for sorting
+    };
+
+    // Optimistically add user message for non-logged-in users
     if (!user) {
-        const userMessage: Message = {
-            id: `local-user-${userMessageTimestamp.getTime()}`,
-            role: 'user',
-            content: input,
-            timestamp: userMessageTimestamp,
-        };
         setLocalMessages((prev) => [...prev, userMessage]);
     } else if (messagesCollectionRef) {
-      // If logged in, save to Firestore. `useCollection` will handle the UI update.
-      addDocumentNonBlocking(messagesCollectionRef, {
+      // For logged-in users, write to Firestore and let the listener handle the UI update.
+      // We don't add to localMessages here to prevent duplication.
+      await addDocumentNonBlocking(messagesCollectionRef, {
         role: 'user',
         content: input,
         timestamp: userMessageTimestamp,
       });
     }
   
-    // Prepare for assistant's response
     const assistantId = `assistant-${Date.now()}`;
     const assistantMessage: Message = {
       id: assistantId,
       role: 'assistant',
       content: '',
-      timestamp: new Date(userMessageTimestamp.getTime() + 1),
+      timestamp: new Date(Date.now() + 1), // ensure it's after user message
     };
+    
+    // Optimistically add the empty assistant message to show the "thinking" state
     setLocalMessages((prev) => [...prev, assistantMessage]);
   
     try {
@@ -110,17 +118,27 @@ export function ChatInterface() {
       }
   
       if (user && messagesCollectionRef) {
-        addDocumentNonBlocking(messagesCollectionRef, {
+        // Save the full response to Firestore.
+        await addDocumentNonBlocking(messagesCollectionRef, {
           role: 'assistant',
           content: fullResponse,
-          timestamp: assistantMessage.timestamp,
+          timestamp: serverTimestamp(),
         });
       }
   
-      // If user is logged in, we can now remove the local version of the assistant's message,
-      // as it will be replaced by the one from Firestore.
-      if (user) {
-        setLocalMessages(prev => prev.filter(m => m.id !== assistantId));
+      // Now that streaming is complete and data is saved (if logged in),
+      // we can remove the temporary local messages (user and assistant)
+      // as they will be replaced by the single source of truth from Firestore.
+      if(user) {
+        setLocalMessages(prev => prev.filter(m => m.id !== tempUserMessageId && m.id !== assistantId));
+      } else {
+        // If not logged in, just update the final content of the assistant message.
+        // The user message is already there.
+        setLocalMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantId ? { ...msg, content: fullResponse, timestamp: new Date() } : msg
+          )
+        );
       }
   
     } catch (error) {
@@ -152,7 +170,6 @@ export function ChatInterface() {
                     <div className="flex-1 space-y-2 max-w-[75%]">
                       <Skeleton className="h-12 w-full" />
                     </div>
-                    <Skeleton className="size-10 rounded-full" />
                 </div>
                 <div className="flex items-start gap-4">
                   <Skeleton className="size-10 rounded-full" />
@@ -166,9 +183,9 @@ export function ChatInterface() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
-            {isLoading && !messages.find(m => m.role === 'assistant' && m.content) && (
+            {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
                  <ChatMessage 
-                    message={{ id: 'thinking', role: 'assistant', content: 'Thinking...' }} 
+                    message={{ id: 'thinking', role: 'assistant', content: '' }} 
                  />
             )}
             {!isUserLoading && !user && messages.length === 0 && !isLoading && (
