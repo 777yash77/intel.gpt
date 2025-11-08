@@ -22,7 +22,10 @@ export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
   return legalAIChatbotFlow(input);
 }
 
-const legalAIChatbotPrompt = `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
+const legalAIChatbotPrompt = ai.definePrompt({
+  name: 'legalAIChatbotPrompt',
+  input: { schema: LegalAIChatbotInputSchema }, // Correctly define the input schema here
+  prompt: `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
 
 You MUST adopt the persona of a helpful expert and strictly adhere to the following formatting and content requirements.
 
@@ -49,7 +52,8 @@ You MUST adopt the persona of a helpful expert and strictly adhere to the follow
 Now, please provide a comprehensive and well-structured answer to the following user query.
 
 **USER QUERY:**
-{{{query}}}`;
+{{{query}}}`,
+});
 
 const legalAIChatbotFlow = ai.defineFlow(
   {
@@ -57,15 +61,12 @@ const legalAIChatbotFlow = ai.defineFlow(
     inputSchema: LegalAIChatbotInputSchema,
     outputSchema: z.string(),
   },
-  async ({ query }) => {
+  async (input) => {
     const { stream } = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
-      input: { query },
+      input, // Pass the whole input object
     });
     
-    // The stream provides chunks with a `text` property. We need to create a new
-    // stream that only yields the text content to avoid serialization issues
-    // when passing the data from a Server Component to a Client Component.
     const textStream = new ReadableStream({
       async start(controller) {
         for await (const chunk of stream) {
