@@ -61,21 +61,14 @@ const legalAIChatbotFlow = ai.defineFlow(
     inputSchema: LegalAIChatbotInputSchema,
     outputSchema: z.string(),
   },
-  async (input) => {
+  async function* (input) {
     const { stream } = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
       input,
     });
     
-    const textStream = new ReadableStream({
-      async start(controller) {
-        for await (const chunk of stream) {
-          controller.enqueue(chunk.text);
-        }
-        controller.close();
-      },
-    });
-
-    return textStream;
+    for await (const chunk of stream) {
+      yield chunk.text;
+    }
   }
 );
