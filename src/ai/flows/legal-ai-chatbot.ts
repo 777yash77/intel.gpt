@@ -38,6 +38,8 @@ For any given query, your answer should be comprehensive. When appropriate, incl
 
 Your response should flow naturally, like a conversation with an expert, not like a rigid report. Break down complex topics into easy-to-understand parts.
 
+Answer the following user query.
+
 USER QUERY:
 {{{query}}}`;
 
