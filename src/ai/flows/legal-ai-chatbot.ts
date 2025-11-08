@@ -19,7 +19,7 @@ const LegalAIChatbotInputSchema = z.object({
 export type LegalAIChatbotInput = z.infer<typeof LegalAIChatbotInputSchema>;
 
 export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
-  const stream = await legalAIChatbotFlow(input);
+  const {stream} = await legalAIChatbotFlow(input);
 
   return stream;
 }
@@ -58,14 +58,12 @@ const legalAIChatbotFlow = ai.defineFlow(
     name: 'legalAIChatbotFlow',
     inputSchema: LegalAIChatbotInputSchema,
   },
-  async function* (input) {
+  async (input) => {
     const {stream} = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
       input: input,
     });
-
-    for await (const chunk of stream) {
-      yield chunk.text;
-    }
+    
+    return stream;
   }
 );
