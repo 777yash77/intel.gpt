@@ -22,7 +22,10 @@ export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
   return legalAIChatbotFlow(input);
 }
 
-const legalAIChatbotPrompt = `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
+const legalAIChatbotPrompt = ai.definePrompt({
+  name: 'legalAIChatbotPrompt',
+  input: { schema: LegalAIChatbotInputSchema },
+  template: `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
 
 You MUST adopt the persona of a helpful expert and strictly adhere to the following formatting and content requirements.
 
@@ -49,18 +52,21 @@ You MUST adopt the persona of a helpful expert and strictly adhere to the follow
 Now, please provide a comprehensive and well-structured answer to the following user query.
 
 **USER QUERY:**
-{{query}}`;
+{{query}}`,
+});
+
 
 const legalAIChatbotFlow = ai.defineFlow(
   {
     name: 'legalAIChatbotFlow',
     inputSchema: LegalAIChatbotInputSchema,
     outputSchema: z.string(),
+    stream: true,
   },
   async function* (input) {
     const { stream } = await ai.generateStream({
-      prompt: legalAIChatbotPrompt,
-      input: { query: input.query },
+      model: 'googleai/gemini-2.5-flash',
+      prompt: await legalAIChatbotPrompt.render({input}),
     });
 
     for await (const chunk of stream) {
