@@ -153,7 +153,7 @@ export function ChatInterface() {
   
     } catch (error) {
       console.error('Error interacting with chatbot:', error);
-      const errorMsg = 'Failed to get a response from the assistant. Please try again.';
+      const errorMsg = "The assistant failed to respond. This can happen due to high demand or API rate limits. Please wait a moment and try again.";
       setLocalMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantId ? { ...msg, content: errorMsg } : msg
@@ -161,8 +161,8 @@ export function ChatInterface() {
       );
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: errorMsg,
+        title: 'Assistant Error',
+        description: "Failed to get a response from the assistant.",
       });
     } finally {
       setIsLoading(false);
