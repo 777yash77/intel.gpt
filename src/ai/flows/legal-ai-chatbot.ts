@@ -49,7 +49,7 @@ You MUST adopt the persona of a helpful expert and strictly adhere to the follow
 Now, please provide a comprehensive and well-structured answer to the following user query.
 
 **USER QUERY:**
-{{input}}`;
+{{query}}`;
 
 const legalAIChatbotFlow = ai.defineFlow(
   {
@@ -60,7 +60,7 @@ const legalAIChatbotFlow = ai.defineFlow(
   async function* (input) {
     const { stream } = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
-      input: input.query,
+      input: { query: input.query },
     });
 
     for await (const chunk of stream) {
