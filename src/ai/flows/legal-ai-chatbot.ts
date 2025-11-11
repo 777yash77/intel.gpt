@@ -55,10 +55,12 @@ const legalAIChatbotFlow = ai.defineFlow(
   {
     name: 'legalAIChatbotFlow',
     inputSchema: LegalAIChatbotInputSchema,
-    outputSchema: z.string(),
-    stream: true,
+    // The output is now correctly handled as a stream by the return value,
+    // so we don't need to define an output schema or stream property here.
   },
   async (input) => {
+    // This will return an object like { stream, ...rest }
+    // which is what the caller `streamLegalAIChatbot` expects.
     return await ai.generate({
       model: 'googleai/gemini-2.5-flash',
       prompt: promptTemplate,
