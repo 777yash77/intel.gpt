@@ -50,7 +50,6 @@ Now, please provide a comprehensive and well-structured answer to the following 
 **USER QUERY:**
 {{query}}`;
 
-
 const legalAIChatbotFlow = ai.defineFlow(
   {
     name: 'legalAIChatbotFlow',
@@ -59,12 +58,9 @@ const legalAIChatbotFlow = ai.defineFlow(
     stream: true,
   },
   async function* (input) {
-    
     const { stream } = await ai.generateStream({
         model: 'googleai/gemini-2.5-flash',
-        prompt: {
-            text: promptTemplate
-        },
+        prompt: promptTemplate,
         input: {
             query: input.query
         }
