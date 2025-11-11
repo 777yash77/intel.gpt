@@ -31,16 +31,6 @@ export async function summarizeLegalArticle(input: SummarizeLegalArticleInput): 
   return summarizeLegalArticleFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'summarizeLegalArticlePrompt',
-  input: {schema: SummarizeLegalArticleInputSchema},
-  output: {schema: SummarizeLegalArticleOutputSchema},
-  prompt: `You are an AI legal assistant tasked with summarizing legal articles and court case documents.  Provide a concise summary of the document's key points, relevant historical context, and links to related online resources.
-
-Document Text:
-{{{documentText}}}`,
-});
-
 const summarizeLegalArticleFlow = ai.defineFlow(
   {
     name: 'summarizeLegalArticleFlow',
@@ -48,7 +38,17 @@ const summarizeLegalArticleFlow = ai.defineFlow(
     outputSchema: SummarizeLegalArticleOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await ai.generate({
+      prompt: `You are an AI legal assistant tasked with summarizing legal articles and court case documents.  Provide a concise summary of the document's key points, relevant historical context, and links to related online resources.
+
+Document Text:
+{{{documentText}}}`,
+      input,
+      model: 'googleai/gemini-2.5-flash',
+      output: {
+        schema: SummarizeLegalArticleOutputSchema,
+      },
+    });
     return output!;
   }
 );
