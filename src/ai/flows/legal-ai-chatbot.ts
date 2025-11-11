@@ -19,13 +19,10 @@ const LegalAIChatbotInputSchema = z.object({
 export type LegalAIChatbotInput = z.infer<typeof LegalAIChatbotInputSchema>;
 
 export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
-  return legalAIChatbotFlow(input);
+  return legalAIChatbotFlow(input.query);
 }
 
-const legalAIChatbotPrompt = ai.definePrompt({
-  name: 'legalAIChatbotPrompt',
-  input: { schema: LegalAIChatbotInputSchema },
-  prompt: `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
+const legalAIChatbotPrompt = `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
 
 You MUST adopt the persona of a helpful expert and strictly adhere to the following formatting and content requirements.
 
@@ -52,19 +49,18 @@ You MUST adopt the persona of a helpful expert and strictly adhere to the follow
 Now, please provide a comprehensive and well-structured answer to the following user query.
 
 **USER QUERY:**
-{{{query}}}`,
-});
+{{prompt}}`;
 
 const legalAIChatbotFlow = ai.defineFlow(
   {
     name: 'legalAIChatbotFlow',
-    inputSchema: LegalAIChatbotInputSchema,
+    inputSchema: z.string(),
     outputSchema: z.string(),
   },
-  async function* (input) {
+  async function* (prompt) {
     const { stream } = await ai.generateStream({
       prompt: legalAIChatbotPrompt,
-      input: input,
+      input: prompt,
     });
     
     for await (const chunk of stream) {
