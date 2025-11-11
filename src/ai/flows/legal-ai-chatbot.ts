@@ -4,7 +4,6 @@
  * @fileOverview This file defines a Genkit flow for interacting with a legal AI chatbot.
  *
  * The flow takes a user query as input and streams back a legal insight.
- * It uses a prompt to generate the legal insight based on the user query.
  *
  * @interface LegalAIChatbotInput - Represents the input schema for the legal AI chatbot.
  * @function streamLegalAIChatbot - A function that calls the legal AI chatbot flow and returns a stream.
@@ -22,11 +21,7 @@ export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
   return legalAIChatbotFlow(input);
 }
 
-const legalAIChatbotPrompt = ai.definePrompt({
-  name: 'legalAIChatbotPrompt',
-  input: { schema: LegalAIChatbotInputSchema },
-  model: 'googleai/gemini-2.5-flash',
-  template: `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
+const promptTemplate = `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
 
 You MUST adopt the persona of a helpful expert and strictly adhere to the following formatting and content requirements.
 
@@ -53,8 +48,7 @@ You MUST adopt the persona of a helpful expert and strictly adhere to the follow
 Now, please provide a comprehensive and well-structured answer to the following user query.
 
 **USER QUERY:**
-{{query}}`,
-});
+{{query}}`;
 
 
 const legalAIChatbotFlow = ai.defineFlow(
@@ -65,7 +59,16 @@ const legalAIChatbotFlow = ai.defineFlow(
     stream: true,
   },
   async function* (input) {
-    const { stream } = await legalAIChatbotPrompt.stream(input);
+    
+    const { stream } = await ai.generateStream({
+        model: 'googleai/gemini-2.5-flash',
+        prompt: {
+            text: promptTemplate
+        },
+        input: {
+            query: input.query
+        }
+    });
     
     for await (const chunk of stream) {
       yield chunk.text;
