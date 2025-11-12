@@ -48,7 +48,7 @@ Now, please provide a comprehensive and well-structured answer to the following 
 
 
 export async function* streamLegalAIChatbot(input: LegalAIChatbotInput) {
-    const { stream } = await ai.generate({
+    const { stream, response } = ai.generate({
       model: 'googleai/gemini-2.5-flash',
       prompt: promptTemplate,
       input,
@@ -58,4 +58,6 @@ export async function* streamLegalAIChatbot(input: LegalAIChatbotInput) {
     for await (const chunk of stream) {
       yield chunk.text;
     }
+    
+    await response;
 }
