@@ -181,50 +181,52 @@ export function ChatInterface() {
 
   return (
     <div className="relative flex h-full flex-col bg-card">
-      <ScrollArea className="flex-1" viewportRef={viewportRef}>
-        <div className="container mx-auto flex h-full flex-col p-4 md:p-6">
-          {hasMessages ? (
-            <div className="flex-1 space-y-6">
-              {(isLoadingHistory && !messages.length) && (
-                <>
-                  <div className="flex items-start gap-4 justify-end">
+      <div className="container mx-auto flex flex-1 flex-col overflow-hidden p-4 md:p-6">
+        <ScrollArea className="flex-1" viewportRef={viewportRef}>
+          <div className="flex h-full flex-col justify-start">
+            {hasMessages ? (
+              <div className="space-y-6">
+                {(isLoadingHistory && !messages.length) && (
+                  <>
+                    <div className="flex items-start gap-4 justify-end">
+                        <div className="flex-1 space-y-2 max-w-[75%]">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <Skeleton className="size-10 rounded-full" />
                       <div className="flex-1 space-y-2 max-w-[75%]">
+                        <Skeleton className="h-4 w-32" />
                         <Skeleton className="h-12 w-full" />
                       </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <Skeleton className="size-10 rounded-full" />
-                    <div className="flex-1 space-y-2 max-w-[75%]">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-12 w-full" />
                     </div>
-                  </div>
-                </>
-              )}
-              {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-              {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-                   <ChatMessage 
-                      message={{ id: 'thinking', role: 'assistant', content: '' }} 
-                   />
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-1 items-center justify-center">
-              {!isUserLoading && !user && !isLoading && (
-                  <div className="text-center text-muted-foreground">
-                      <p>
-                          <Link href="/login" className="underline text-primary">Log in</Link> or{' '}
-                          <Link href="/signup" className="underline text-primary">sign up</Link>
-                          {' '}to save your chat history.
-                      </p>
-                  </div>
-              )}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+                  </>
+                )}
+                {messages.map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
+                {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+                     <ChatMessage 
+                        message={{ id: 'thinking', role: 'assistant', content: '' }} 
+                     />
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-1 items-center justify-center">
+                {!isUserLoading && !user && !isLoading && (
+                    <div className="text-center text-muted-foreground">
+                        <p>
+                            <Link href="/login" className="underline text-primary">Log in</Link> or{' '}
+                            <Link href="/signup" className="underline text-primary">sign up</Link>
+                            {' '}to save your chat history.
+                        </p>
+                    </div>
+                )}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
       <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
         <div className="container mx-auto">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
