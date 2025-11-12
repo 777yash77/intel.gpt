@@ -182,10 +182,9 @@ export function ChatInterface() {
   return (
     <div className="relative flex h-full flex-col bg-card">
       <div className="container mx-auto flex flex-1 flex-col overflow-hidden p-4 md:p-6">
-        <ScrollArea className="flex-1" viewportRef={viewportRef}>
-          <div className="flex h-full flex-col justify-start">
+        <ScrollArea className="flex-grow" viewportRef={viewportRef}>
             {hasMessages ? (
-              <div className="space-y-6">
+              <div className="space-y-6 pr-4">
                 {(isLoadingHistory && !messages.length) && (
                   <>
                     <div className="flex items-start gap-4 justify-end">
@@ -212,7 +211,7 @@ export function ChatInterface() {
                 )}
               </div>
             ) : (
-              <div className="flex flex-1 items-center justify-center">
+              <div className="flex flex-1 h-full items-center justify-center">
                 {!isUserLoading && !user && !isLoading && (
                     <div className="text-center text-muted-foreground">
                         <p>
@@ -224,7 +223,6 @@ export function ChatInterface() {
                 )}
               </div>
             )}
-          </div>
         </ScrollArea>
       </div>
       <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
