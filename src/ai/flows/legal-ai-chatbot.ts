@@ -17,10 +17,6 @@ const LegalAIChatbotInputSchema = z.object({
 });
 export type LegalAIChatbotInput = z.infer<typeof LegalAIChatbotInputSchema>;
 
-export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
-  return legalAIChatbotFlow(input);
-}
-
 const promptTemplate = `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
 
 You MUST adopt the persona of a helpful expert and strictly adhere to the following formatting and content requirements.
@@ -50,12 +46,8 @@ Now, please provide a comprehensive and well-structured answer to the following 
 **USER QUERY:**
 {{query}}`;
 
-const legalAIChatbotFlow = ai.defineFlow(
-  {
-    name: 'legalAIChatbotFlow',
-    inputSchema: LegalAIChatbotInputSchema,
-  },
-  async function* (input) {
+
+export async function* streamLegalAIChatbot(input: LegalAIChatbotInput) {
     const { stream } = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
       prompt: promptTemplate,
@@ -66,5 +58,4 @@ const legalAIChatbotFlow = ai.defineFlow(
     for await (const chunk of stream) {
       yield chunk.text;
     }
-  }
-);
+}
