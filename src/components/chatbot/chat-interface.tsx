@@ -177,8 +177,10 @@ export function ChatInterface() {
     }
   };
 
+  const hasMessages = messages.length > 0;
+
   return (
-    <div className="relative flex-1 flex flex-col h-full bg-card">
+    <div className="relative flex flex-1 flex-col h-full bg-card">
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
         <div className="container mx-auto p-4 md:p-6">
           <div className="space-y-6">
@@ -206,14 +208,16 @@ export function ChatInterface() {
                     message={{ id: 'thinking', role: 'assistant', content: '' }} 
                  />
             )}
-            {!isUserLoading && !user && messages.length === 0 && !isLoading && (
-                <div className="text-center text-muted-foreground p-8">
+            {!isUserLoading && !user && !hasMessages && !isLoading && (
+              <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+                <div className="text-center text-muted-foreground">
                     <p>
                         <Link href="/login" className="underline text-primary">Log in</Link> or{' '}
                         <Link href="/signup" className="underline text-primary">sign up</Link>
                         {' '}to save your chat history.
                     </p>
                 </div>
+              </div>
             )}
           </div>
         </div>
