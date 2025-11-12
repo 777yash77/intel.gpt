@@ -27,9 +27,17 @@ const SummarizeLegalArticleOutputSchema = z.object({
 });
 export type SummarizeLegalArticleOutput = z.infer<typeof SummarizeLegalArticleOutputSchema>;
 
-export async function summarizeLegalArticle(input: SummarizeLegalArticleInput): Promise<SummarizeLegalArticleOutput> {
-  return summarizeLegalArticleFlow(input);
-}
+const summarizeLegalArticlePrompt = ai.definePrompt({
+  name: 'summarizeLegalArticlePrompt',
+  input: { schema: SummarizeLegalArticleInputSchema },
+  output: { schema: SummarizeLegalArticleOutputSchema },
+  prompt: `You are an AI legal assistant tasked with summarizing legal articles and court case documents.  Provide a concise summary of the document's key points, relevant historical context, and links to related online resources.
+
+Document Text:
+{{{documentText}}}`,
+  model: 'googleai/gemini-2.5-flash',
+});
+
 
 const summarizeLegalArticleFlow = ai.defineFlow(
   {
@@ -38,17 +46,11 @@ const summarizeLegalArticleFlow = ai.defineFlow(
     outputSchema: SummarizeLegalArticleOutputSchema,
   },
   async input => {
-    const {output} = await ai.generate({
-      prompt: `You are an AI legal assistant tasked with summarizing legal articles and court case documents.  Provide a concise summary of the document's key points, relevant historical context, and links to related online resources.
-
-Document Text:
-{{{documentText}}}`,
-      input,
-      model: 'googleai/gemini-2.5-flash',
-      output: {
-        schema: SummarizeLegalArticleOutputSchema,
-      },
-    });
+    const {output} = await summarizeLegalArticlePrompt(input);
     return output!;
   }
 );
+
+export async function summarizeLegalArticle(input: SummarizeLegalArticleInput): Promise<SummarizeLegalArticleOutput> {
+  return summarizeLegalArticleFlow(input);
+}
