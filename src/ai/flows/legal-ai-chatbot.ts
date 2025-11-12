@@ -64,7 +64,7 @@ const legalAIChatbotFlow = ai.defineFlow(
     });
 
     for await (const chunk of stream) {
-      yield chunk;
+      yield chunk.text;
     }
   }
 );
