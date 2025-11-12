@@ -9,13 +9,13 @@ import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { addDocumentNonBlocking, useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore';
 
 export type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp?: any;
+  timestamp?: Timestamp | Date | FieldValue;
 };
 
 // Helper to get milliseconds from either a Firestore Timestamp or a JS Date
@@ -97,7 +97,7 @@ export function ChatInterface() {
     } else if (messagesCollectionRef) {
       // For logged-in users, write to Firestore and let the listener handle the UI update.
       // We don't add to localMessages here to prevent duplication.
-      await addDocumentNonBlocking(messagesCollectionRef, {
+      addDocumentNonBlocking(messagesCollectionRef, {
         role: 'user',
         content: input,
         timestamp: userMessageTimestamp,
@@ -129,7 +129,7 @@ export function ChatInterface() {
   
       if (user && messagesCollectionRef) {
         // Save the full response to Firestore.
-        await addDocumentNonBlocking(messagesCollectionRef, {
+        addDocumentNonBlocking(messagesCollectionRef, {
           role: 'assistant',
           content: fullResponse,
           timestamp: serverTimestamp(),

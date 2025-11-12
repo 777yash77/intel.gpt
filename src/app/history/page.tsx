@@ -2,7 +2,7 @@
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, Timestamp } from 'firebase/firestore';
 import { Message } from '@/components/chatbot/chat-interface';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,21 @@ import { useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Bot, User as UserIcon } from 'lucide-react';
 import { format } from 'date-fns';
+
+const getTimestampMillis = (timestamp: any): number => {
+  if (timestamp instanceof Timestamp) {
+    return timestamp.toMillis();
+  }
+  if (timestamp instanceof Date) {
+    return timestamp.getTime();
+  }
+  // Fallback for FieldValue or other types during optimistic updates
+  if (timestamp && typeof timestamp === 'object' && 'toMillis' in timestamp) {
+      return timestamp.toMillis();
+  }
+  return Date.now(); // Should be rare
+};
+
 
 export default function HistoryPage() {
   const { user, isUserLoading } = useUser();
@@ -63,7 +78,7 @@ export default function HistoryPage() {
     )
   }
 
-  const sortedMessages = messages ? [...messages].sort((a, b) => (b.timestamp as any) - (a.timestamp as any)) : [];
+  const sortedMessages = messages ? [...messages].sort((a, b) => getTimestampMillis(a.timestamp) - getTimestampMillis(b.timestamp)) : [];
 
   return (
     <div className="flex h-dvh flex-col">
@@ -72,14 +87,14 @@ export default function HistoryPage() {
         <div className="container mx-auto max-w-4xl space-y-6 p-4 md:p-6">
           {sortedMessages.length > 0 ? (
             sortedMessages.map((msg, index) => (
-              <Card key={index}>
+              <Card key={msg.id || index}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     {msg.role === 'user' ? <UserIcon className="size-4" /> : <Bot className="size-4" />}
                     {msg.role === 'user' ? 'You' : 'Assistant'}
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
-                     {msg.timestamp ? format((msg.timestamp as any).toDate(), 'PPpp') : ''}
+                     {msg.timestamp && msg.timestamp.toDate ? format(msg.timestamp.toDate(), 'PPpp') : ''}
                   </p>
                 </CardHeader>
                 <CardContent>
