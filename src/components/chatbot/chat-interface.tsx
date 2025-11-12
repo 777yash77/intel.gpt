@@ -180,46 +180,49 @@ export function ChatInterface() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="relative flex flex-1 flex-col h-full bg-card">
+    <div className="relative flex h-full flex-col bg-card">
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
-        <div className="container mx-auto p-4 md:p-6">
-          <div className="space-y-6">
-            {(isLoadingHistory && !messages.length) && (
-              <>
-                <div className="flex items-start gap-4 justify-end">
+        <div className="container mx-auto flex h-full flex-col p-4 md:p-6">
+          {hasMessages ? (
+            <div className="space-y-6">
+              {(isLoadingHistory && !messages.length) && (
+                <>
+                  <div className="flex items-start gap-4 justify-end">
+                      <div className="flex-1 space-y-2 max-w-[75%]">
+                        <Skeleton className="h-12 w-full" />
+                      </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="size-10 rounded-full" />
                     <div className="flex-1 space-y-2 max-w-[75%]">
+                      <Skeleton className="h-4 w-32" />
                       <Skeleton className="h-12 w-full" />
                     </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <Skeleton className="size-10 rounded-full" />
-                  <div className="flex-1 space-y-2 max-w-[75%]">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-12 w-full" />
                   </div>
-                </div>
-              </>
-            )}
-            {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
-            ))}
-            {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-                 <ChatMessage 
-                    message={{ id: 'thinking', role: 'assistant', content: '' }} 
-                 />
-            )}
-            {!isUserLoading && !user && !hasMessages && !isLoading && (
-              <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                    <p>
-                        <Link href="/login" className="underline text-primary">Log in</Link> or{' '}
-                        <Link href="/signup" className="underline text-primary">sign up</Link>
-                        {' '}to save your chat history.
-                    </p>
-                </div>
-              </div>
-            )}
-          </div>
+                </>
+              )}
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))}
+              {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+                   <ChatMessage 
+                      message={{ id: 'thinking', role: 'assistant', content: '' }} 
+                   />
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              {!isUserLoading && !user && !isLoading && (
+                  <div className="text-center text-muted-foreground">
+                      <p>
+                          <Link href="/login" className="underline text-primary">Log in</Link> or{' '}
+                          <Link href="/signup" className="underline text-primary">sign up</Link>
+                          {' '}to save your chat history.
+                      </p>
+                  </div>
+              )}
+            </div>
+          )}
         </div>
       </ScrollArea>
       <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
