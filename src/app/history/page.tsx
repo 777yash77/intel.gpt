@@ -2,7 +2,7 @@
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, Timestamp } from 'firebase/firestore';
+import { collection, Timestamp, FieldValue } from 'firebase/firestore';
 import { Message } from '@/components/chatbot/chat-interface';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -18,12 +18,28 @@ const getTimestampMillis = (timestamp: any): number => {
   if (timestamp instanceof Date) {
     return timestamp.getTime();
   }
-  // Fallback for FieldValue or other types during optimistic updates
-  if (timestamp && typeof timestamp === 'object' && 'toMillis' in timestamp) {
+  // Fallback for FieldValue or other types during optimistic updates.
+  // It won't be perfectly sorted until the server value arrives, but it's better than crashing.
+  if (timestamp && typeof timestamp.toMillis === 'function') {
       return timestamp.toMillis();
   }
-  return Date.now(); // Should be rare
+  // For serverTimestamp(), return a recent time to keep it at the bottom.
+  // This is an optimistic placement.
+  return Date.now();
 };
+
+const getSafeDate = (timestamp: any): Date | null => {
+  if (timestamp instanceof Timestamp) {
+    return timestamp.toDate();
+  }
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  if (timestamp && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  return null;
+}
 
 
 export default function HistoryPage() {
@@ -86,22 +102,25 @@ export default function HistoryPage() {
       <main className="flex-1 overflow-auto">
         <div className="container mx-auto max-w-4xl space-y-6 p-4 md:p-6">
           {sortedMessages.length > 0 ? (
-            sortedMessages.map((msg, index) => (
-              <Card key={msg.id || index}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    {msg.role === 'user' ? <UserIcon className="size-4" /> : <Bot className="size-4" />}
-                    {msg.role === 'user' ? 'You' : 'Assistant'}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                     {msg.timestamp && msg.timestamp.toDate ? format(msg.timestamp.toDate(), 'PPpp') : ''}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{msg.content}</p>
-                </CardContent>
-              </Card>
-            ))
+            sortedMessages.map((msg, index) => {
+              const displayDate = getSafeDate(msg.timestamp);
+              return (
+                <Card key={msg.id || index}>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      {msg.role === 'user' ? <UserIcon className="size-4" /> : <Bot className="size-4" />}
+                      {msg.role === 'user' ? 'You' : 'Assistant'}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {displayDate ? format(displayDate, 'PPpp') : 'Sending...'}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{msg.content}</p>
+                  </CardContent>
+                </Card>
+              )
+            })
           ) : (
             <Card>
               <CardContent className="p-6 text-center text-muted-foreground">
