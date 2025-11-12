@@ -26,8 +26,16 @@ const getTimestampMillis = (timestamp: any): number => {
   if (timestamp instanceof Date) {
     return timestamp.getTime();
   }
-  return 0; // Fallback for null/undefined or other types
+  // Fallback for FieldValue or other types during optimistic updates.
+  // It won't be perfectly sorted until the server value arrives, but it's better than crashing.
+  if (timestamp && typeof timestamp.toMillis === 'function') {
+      return timestamp.toMillis();
+  }
+  // For serverTimestamp(), return a recent time to keep it at the bottom.
+  // This is an optimistic placement.
+  return Date.now();
 };
+
 
 export function ChatInterface() {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);

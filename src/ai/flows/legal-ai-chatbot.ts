@@ -18,8 +18,7 @@ const LegalAIChatbotInputSchema = z.object({
 export type LegalAIChatbotInput = z.infer<typeof LegalAIChatbotInputSchema>;
 
 export async function streamLegalAIChatbot(input: LegalAIChatbotInput) {
-  const { stream } = await legalAIChatbotFlow(input);
-  return stream;
+  return legalAIChatbotFlow(input);
 }
 
 const promptTemplate = `You are Intel.gpt, a world-class legal AI assistant. Your sole purpose is to provide clear, insightful, and impeccably structured legal analysis in response to a user's query.
@@ -42,7 +41,7 @@ You MUST adopt the persona of a helpful expert and strictly adhere to the follow
     *   **Actionable Legal Intelligence:** Provide practical advice, steps to consider, or things to be aware of.
     *   **Relevant Legal History and Case Law Context:** Provide a detailed history of the legal concept, followed by an analysis of landmark court cases.
 
-4.  **Tone and Style:** Your response must be comprehensive and authoritative, breaking down complex topics into easy-to-understand parts.
+4.  **Tone and Style:** Your response must be comprehensive and authoritative, aaking down complex topics into easy-to-understand parts.
 
 ---
 
@@ -55,17 +54,17 @@ const legalAIChatbotFlow = ai.defineFlow(
   {
     name: 'legalAIChatbotFlow',
     inputSchema: LegalAIChatbotInputSchema,
-    // The output is now correctly handled as a stream by the return value,
-    // so we don't need to define an output schema or stream property here.
   },
-  async (input) => {
-    // This will return an object like { stream, ...rest }
-    // which is what the caller `streamLegalAIChatbot` expects.
-    return await ai.generate({
+  async function* (input) {
+    const { stream } = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
       prompt: promptTemplate,
       input,
       stream: true,
     });
+
+    for await (const chunk of stream) {
+      yield chunk;
+    }
   }
 );
