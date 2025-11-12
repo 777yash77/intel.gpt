@@ -184,7 +184,7 @@ export function ChatInterface() {
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
         <div className="container mx-auto flex h-full flex-col p-4 md:p-6">
           {hasMessages ? (
-            <div className="space-y-6">
+            <div className="flex-1 space-y-6">
               {(isLoadingHistory && !messages.length) && (
                 <>
                   <div className="flex items-start gap-4 justify-end">
