@@ -23,6 +23,7 @@ import {
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Bot, Save } from 'lucide-react';
+import { Header } from '../layout/header';
 
 export type Message = {
   id: string;
@@ -198,59 +199,61 @@ export function ChatInterface() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="flex h-full flex-1 flex-col">
-      <div className="flex flex-1 flex-col overflow-y-hidden">
-        {hasMessages || isLoadingHistory ? (
-          <ScrollArea className="flex-1 px-4 md:px-6" viewportRef={viewportRef}>
-            <div className="mx-auto max-w-4xl space-y-6 py-6">
-              {isLoadingHistory && !hasMessages && (
-                <>
-                  <div className="flex items-start justify-end gap-4">
-                    <div className="flex-1 space-y-2 max-w-[75%]">
-                      <Skeleton className="h-12 w-full" />
+    <div className="flex h-dvh flex-col">
+      <Header title="Intelligent Chat" />
+      <main className="flex flex-1 flex-col overflow-y-hidden">
+        <ScrollArea className="flex-1" viewportRef={viewportRef}>
+          <div className="h-full px-4 sm:px-6 lg:px-8">
+            {hasMessages || isLoadingHistory ? (
+               <div className="mx-auto max-w-4xl space-y-6 py-6">
+                {isLoadingHistory && !hasMessages && (
+                  <>
+                    <div className="flex items-start justify-end gap-4">
+                      <div className="flex-1 space-y-2 max-w-[75%]">
+                        <Skeleton className="h-12 w-full" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <Skeleton className="size-10 rounded-full" />
-                    <div className="flex-1 space-y-2 max-w-[75%]">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-12 w-full" />
+                    <div className="flex items-start gap-4">
+                      <Skeleton className="size-10 rounded-full" />
+                      <div className="flex-1 space-y-2 max-w-[75%]">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-12 w-full" />
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-              {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-              {isLoading &&
-                messages[messages.length - 1]?.role !== 'assistant' && (
-                  <ChatMessage
-                    message={{ id: 'thinking', role: 'assistant', content: '' }}
-                  />
+                  </>
                 )}
-            </div>
-          </ScrollArea>
-        ) : (
-          <div className="flex flex-1 items-center justify-center">
-            {!isUserLoading && !user && !isLoading && (
-              <div className="text-center text-muted-foreground">
-                <p className="mb-4 text-lg">
-                  ✍️ Log in to save your conversations 💾
-                </p>
-                <div className="flex justify-center gap-4">
-                  <Button asChild>
-                    <Link href="/login">Log In</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href="/signup">Sign Up</Link>
-
-                  </Button>
-                </div>
+                {messages.map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
+                {isLoading &&
+                  messages[messages.length - 1]?.role !== 'assistant' && (
+                    <ChatMessage
+                      message={{ id: 'thinking', role: 'assistant', content: '' }}
+                    />
+                  )}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                {!isUserLoading && !user && !isLoading && (
+                  <div className="text-center text-muted-foreground">
+                    <p className="mb-4 text-lg">
+                      ✍️ Log in to save your conversations 💾
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <Button asChild>
+                        <Link href="/login">Log In</Link>
+                      </Button>
+                      <Button asChild variant="outline">
+                        <Link href="/signup">Sign Up</Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </ScrollArea>
+      </main>
 
       <div className="border-t px-4 py-3 md:px-6 md:py-4">
         <div className="mx-auto max-w-4xl">
