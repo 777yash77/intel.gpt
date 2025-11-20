@@ -11,9 +11,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <main className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col">
           {children}
-        </main>
+        </div>
       </div>
     </SidebarProvider>
   );
