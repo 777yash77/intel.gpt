@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <main className="relative flex min-h-svh flex-1 flex-col bg-background">
+        <main className="relative flex flex-1 flex-col bg-background">
           {children}
         </main>
       </div>

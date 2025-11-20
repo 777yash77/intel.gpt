@@ -236,7 +236,7 @@ export function ChatInterface() {
       <div className="flex flex-1 flex-col overflow-y-auto">
         {!hasMessages && !isLoadingHistory ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="max-w-md text-center">
+            <div className="w-full max-w-md text-center">
               <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
               <h2 className="mb-2 text-2xl font-semibold text-foreground">
                 Intel.gpt
@@ -269,7 +269,7 @@ export function ChatInterface() {
           </div>
         ) : (
           <ScrollArea className="h-full" viewportRef={viewportRef}>
-            <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
               {isLoadingHistory && !hasMessages && (
                 <>
                   <div className="flex items-start justify-end gap-4">
