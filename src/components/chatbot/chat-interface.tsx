@@ -224,8 +224,9 @@ export function ChatInterface() {
             New Chat
         </Button>
       </Header>
-      <main className="flex flex-1 flex-col overflow-y-hidden">
-        <ScrollArea className="flex-1" viewportRef={viewportRef}>
+
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full" viewportRef={viewportRef}>
             {!hasMessages && !isLoadingHistory ? (
               <div className="flex h-full w-full flex-col items-center justify-center p-4">
                   <div className="max-w-md text-center">
@@ -289,7 +290,7 @@ export function ChatInterface() {
               </div>
             )}
         </ScrollArea>
-      </main>
+      </div>
 
       <div className="border-t bg-background px-4 py-3 md:px-6 md:py-4">
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
