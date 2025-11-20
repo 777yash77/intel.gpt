@@ -199,10 +199,10 @@ export function ChatInterface() {
 
   return (
     <div className="flex h-full flex-1 flex-col">
-      <div className="container mx-auto flex flex-1 flex-col p-4 md:p-6">
+      <div className="flex flex-1 flex-col overflow-y-hidden">
         {hasMessages || isLoadingHistory ? (
-          <ScrollArea className="flex-1" viewportRef={viewportRef}>
-            <div className="space-y-6 pr-4">
+          <ScrollArea className="flex-1 px-4 md:px-6" viewportRef={viewportRef}>
+            <div className="mx-auto max-w-4xl space-y-6 py-6">
               {isLoadingHistory && !hasMessages && (
                 <>
                   <div className="flex items-start justify-end gap-4">
@@ -243,6 +243,7 @@ export function ChatInterface() {
                   </Button>
                   <Button asChild variant="outline">
                     <Link href="/signup">Sign Up</Link>
+
                   </Button>
                 </div>
               </div>
@@ -251,8 +252,8 @@ export function ChatInterface() {
         )}
       </div>
 
-      <div className="p-4 md:p-6">
-        <div className="container mx-auto">
+      <div className="border-t px-4 py-3 md:px-6 md:py-4">
+        <div className="mx-auto max-w-4xl">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
       </div>
