@@ -42,12 +42,10 @@ const getTimestampMillis = (timestamp: any): number => {
     return timestamp.getTime();
   }
   // Fallback for FieldValue or other types during optimistic updates.
-  // It won't be perfectly sorted until the server value arrives, but it's better than crashing.
   if (timestamp && typeof timestamp.toMillis === 'function') {
     return timestamp.toMillis();
   }
   // For serverTimestamp(), return a recent time to keep it at the bottom.
-  // This is an optimistic placement.
   return Date.now();
 };
 
@@ -103,9 +101,6 @@ export function ChatInterface() {
   
   const handleNewChat = () => {
     setLocalMessages([]);
-    // This will clear the UI. If the user is logged in, a page refresh
-    // would bring back the history from Firestore.
-    // This provides a "soft reset" for the current session.
   }
 
   useEffect(() => {
@@ -138,8 +133,6 @@ export function ChatInterface() {
     if (!user) {
       setLocalMessages((prev) => [...prev, userMessage]);
     } else if (messagesCollectionRef) {
-      // For logged-in users, write to Firestore and let the listener handle the UI update.
-      // We don't add to localMessages here to prevent duplication.
       addDocumentNonBlocking(messagesCollectionRef, {
         role: 'user',
         content: input,
@@ -155,7 +148,6 @@ export function ChatInterface() {
       timestamp: new Date(Date.now() + 1), // ensure it's after user message
     };
 
-    // Optimistically add the empty assistant message to show the "thinking" state
      if (!user) {
         setLocalMessages((prev) => [...prev, assistantMessage]);
      } else {
@@ -175,19 +167,14 @@ export function ChatInterface() {
       }
 
       if (user && messagesCollectionRef) {
-        // Save the full response to Firestore.
         addDocumentNonBlocking(messagesCollectionRef, {
           role: 'assistant',
           content: fullResponse,
           timestamp: serverTimestamp(),
         });
         
-         // After successful save, we can let Firestore's listener take over.
-         // We filter out the temp messages (user and assistant) from local state
-         // The user message has already been saved, the assistant message is now saved.
         setLocalMessages(prev => prev.filter(m => m.id !== tempUserMessageId && m.id !== assistantId));
       } else {
-        // If not logged in, just update the final content of the assistant message.
         setLocalMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantId
@@ -217,7 +204,6 @@ export function ChatInterface() {
 
   const hasMessages = messages.length > 0;
 
-  // This is the new edge-to-edge layout structure
   return (
     <div className="flex h-dvh flex-col bg-background">
       <Header title="Intelligent Chat">
@@ -236,7 +222,6 @@ export function ChatInterface() {
 
       <div className="flex-1 flex flex-col overflow-y-hidden">
         {!hasMessages && !isLoadingHistory ? (
-          // Empty State: Centered content
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-md text-center">
               <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
@@ -270,7 +255,6 @@ export function ChatInterface() {
             </div>
           </div>
         ) : (
-          // Active Chat State
           <ScrollArea className="h-full" viewportRef={viewportRef}>
             <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
               {isLoadingHistory && !hasMessages && (
@@ -304,7 +288,6 @@ export function ChatInterface() {
         )}
       </div>
 
-      {/* Input Bar */}
       <div className="border-t bg-background px-4 py-3 md:px-6 md:py-4">
         <div className='mx-auto max-w-4xl'>
             <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
