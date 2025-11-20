@@ -228,7 +228,7 @@ export function ChatInterface() {
         <ScrollArea className="flex-1" viewportRef={viewportRef}>
           <div className="h-full px-4 sm:px-6 lg:px-8">
             {!hasMessages && !isLoadingHistory ? (
-               <div className="flex h-full items-center justify-center">
+              <div className="flex h-full flex-col items-center justify-center">
                   <div className="max-w-md text-center">
                     <Bot className="mx-auto mb-4 size-12 text-muted-foreground" />
                     <h2 className="mb-2 text-2xl font-semibold text-foreground">
@@ -240,7 +240,7 @@ export function ChatInterface() {
                     {!isUserLoading && !user && (
                       <div className="rounded-lg border bg-card p-4 text-card-foreground">
                         <p className="mb-4 text-lg">
-                          ✍️ Log in to save your conversations.
+                          Log in to save your conversations.
                         </p>
                         <div className="flex justify-center gap-4">
                           <Button asChild>
@@ -259,7 +259,7 @@ export function ChatInterface() {
                       </div>
                     )}
                   </div>
-                </div>
+              </div>
             ) : (
                <div className="mx-auto w-full max-w-4xl space-y-6 py-6">
                 {isLoadingHistory && !hasMessages && (
