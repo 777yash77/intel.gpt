@@ -239,7 +239,7 @@ export function ChatInterface() {
                     </p>
                     {!isUserLoading && !user && (
                       <div className="rounded-lg border bg-card p-4 text-card-foreground">
-                        <p className="mb-4 text-lg">
+                        <p className="mb-3 text-base">
                           Log in to save your conversations.
                         </p>
                         <div className="flex justify-center gap-4">
@@ -249,7 +249,7 @@ export function ChatInterface() {
                               Log In
                             </Link>
                           </Button>
-                          <Button asChild variant="outline">
+                          <Button asChild variant="secondary">
                             <Link href="/signup">
                               <UserPlus className="mr-2" />
                               Sign Up
