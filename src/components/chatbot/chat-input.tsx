@@ -40,7 +40,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Ask a legal question..."
-        className="min-h-12 max-h-48 flex-1 resize-none pr-12"
+        className="min-h-12 max-h-48 flex-1 resize-none rounded-2xl border-2 border-border bg-card pr-12 shadow-sm"
         rows={1}
         disabled={isLoading}
         aria-label="Chat input"
@@ -48,7 +48,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       <Button
         type="submit"
         size="icon"
-        className="absolute bottom-2 right-2 size-8"
+        className="absolute bottom-2.5 right-2.5 size-7"
         disabled={isLoading || !input.trim()}
         aria-label="Send message"
       >

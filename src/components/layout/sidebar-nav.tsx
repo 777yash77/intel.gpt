@@ -12,6 +12,8 @@ import {
   BookText,
   UserPlus,
   FilePenLine,
+  ArrowLeft,
+  User,
 } from 'lucide-react';
 
 import {
@@ -107,11 +109,11 @@ export function SidebarNav() {
             <SidebarMenuButton
               asChild
               isActive={pathname === '/find-lawyer'}
-              tooltip={{ children: 'Find a Lawyer', side: 'right' }}
+              tooltip={{ children: 'Legal Lawyer', side: 'right' }}
             >
               <Link href="/find-lawyer">
                 <Gavel />
-                <span>Find a Lawyer</span>
+                <span>Legal Lawyer</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -155,7 +157,7 @@ export function SidebarNav() {
                   tooltip={{ children: 'Login', side: 'right' }}
                 >
                   <Link href="/login">
-                    <LogIn />
+                    <ArrowLeft />
                     <span>Login</span>
                   </Link>
                 </SidebarMenuButton>
@@ -167,7 +169,7 @@ export function SidebarNav() {
                   tooltip={{ children: 'Sign Up', side: 'right' }}
                 >
                   <Link href="/signup">
-                    <UserPlus />
+                    <User />
                     <span>Sign Up</span>
                   </Link>
                 </SidebarMenuButton>

@@ -22,7 +22,7 @@ import {
   FieldValue,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Bot, Plus, LogIn, UserPlus } from 'lucide-react';
+import { Bot, Plus, LogIn, UserPlus, History as HistoryIcon } from 'lucide-react';
 import { Header } from '../layout/header';
 
 export type Message = {
@@ -219,17 +219,24 @@ export function ChatInterface() {
   return (
     <div className="flex h-dvh flex-col bg-background">
       <Header title="Intelligent Chat">
-         <Button variant="outline" size="sm" onClick={handleNewChat}>
-            <Plus className='mr-2' />
-            New Chat
-        </Button>
+         <div className='flex items-center gap-2'>
+            {user && (
+                <Button variant="outline" size="icon" className="h-9 w-9" asChild>
+                    <Link href="/history"><HistoryIcon className='size-4'/></Link>
+                </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={handleNewChat}>
+                <Plus className='mr-2 size-4' />
+                New Chat
+            </Button>
+         </div>
       </Header>
 
       <div className="flex-1 overflow-y-auto">
         {!hasMessages && !isLoadingHistory ? (
           <div className="flex h-full w-full items-center justify-center">
             <div className="max-w-md text-center">
-              <Bot className="mx-auto mb-4 size-12 text-muted-foreground" />
+              <Bot className="mx-auto mb-4 size-12 text-primary" />
               <h2 className="mb-2 text-2xl font-semibold text-foreground">
                 Intel.gpt
               </h2>
@@ -238,7 +245,7 @@ export function ChatInterface() {
               </p>
               {!isUserLoading && !user && (
                 <div>
-                  <p className="mb-3 text-base text-foreground">
+                  <p className="mb-4 text-base text-foreground">
                     Log in to save your conversations.
                   </p>
                   <div className="flex justify-center gap-4">
@@ -295,7 +302,9 @@ export function ChatInterface() {
 
       {/* Input Bar */}
       <div className="border-t bg-background px-4 py-3 md:px-6 md:py-4">
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <div className='mx-auto max-w-4xl'>
+            <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        </div>
       </div>
     </div>
   );
