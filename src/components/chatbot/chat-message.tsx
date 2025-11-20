@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { Message } from './chat-interface';
@@ -7,44 +10,46 @@ import { Remark } from 'react-remark';
 
 function ChatMessageComponent({ message }: { message: Message }) {
   const isUser = message.role === 'user';
-  
-  // The assistant message is "thinking" if it's the assistant's turn but there's no content yet.
   const isThinking = message.role === 'assistant' && !message.content;
 
   return (
     <div
       className={cn(
-        'flex items-start gap-4',
-        isUser ? 'justify-end' : 'justify-start'
+        'w-full px-6 py-4',
+        isUser ? 'bg-transparent' : 'bg-secondary/20'
       )}
     >
-      {!isUser && (
-        <Avatar className="size-10 border">
-          <AvatarFallback className="bg-primary text-primary-foreground">
-            <Icons.logo className="size-5" />
-          </AvatarFallback>
-        </Avatar>
-      )}
       <div
         className={cn(
-          'max-w-[85%] rounded-lg p-3 text-sm shadow-sm',
-          isUser
-            ? 'rounded-br-none bg-primary text-primary-foreground'
-            : 'rounded-bl-none bg-transparent',
-          isThinking ? 'animate-pulse' : ''
+          'mx-auto flex max-w-[75ch] items-start gap-4 text-[15px]'
         )}
       >
-        {isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
-        ) : isThinking ? (
-            <p className='text-muted-foreground'>Intel.gpt is thinking...</p>
-        ) : (
-          <div
-            className="prose-sm dark:prose-invert max-w-none"
+        <Avatar className="size-8 border">
+          <AvatarFallback
+            className={cn(
+              isUser
+                ? 'bg-transparent text-foreground'
+                : 'bg-primary text-primary-foreground'
+            )}
           >
-            <Remark>{message.content}</Remark>
-          </div>
-        )}
+            {isUser ? 'U' : <Icons.logo className="size-5" />}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 space-y-3 leading-relaxed pt-0.5">
+          {isThinking ? (
+            <p className="text-muted-foreground">Intel.gpt is thinking...</p>
+          ) : (
+            <div
+              className={cn(
+                'prose-sm dark:prose-invert max-w-none',
+                // This ensures paragraphs inside remark have correct spacing
+                '[&_p]:my-0 [&_p:not(:last-child)]:mb-3'
+              )}
+            >
+              <Remark>{message.content}</Remark>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
