@@ -1,6 +1,5 @@
 import {
   Sidebar,
-  SidebarInset,
   SidebarProvider,
 } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
@@ -14,7 +13,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <SidebarInset>{children}</SidebarInset>
+        <main className="relative flex min-h-svh flex-1 flex-col bg-background">
+          {children}
+        </main>
       </div>
     </SidebarProvider>
   );
