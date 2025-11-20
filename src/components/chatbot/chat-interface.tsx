@@ -22,7 +22,7 @@ import {
   FieldValue,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Bot, Plus, LogIn, UserPlus, History as HistoryIcon } from 'lucide-react';
+import { Plus, LogIn, UserPlus, History as HistoryIcon } from 'lucide-react';
 import { Header } from '../layout/header';
 import { Icons } from '../icons';
 
@@ -33,7 +33,6 @@ export type Message = {
   timestamp?: Timestamp | Date | FieldValue;
 };
 
-// Helper to get milliseconds from either a Firestore Timestamp or a JS Date
 const getTimestampMillis = (timestamp: any): number => {
   if (timestamp instanceof Timestamp) {
     return timestamp.toMillis();
@@ -41,11 +40,9 @@ const getTimestampMillis = (timestamp: any): number => {
   if (timestamp instanceof Date) {
     return timestamp.getTime();
   }
-  // Fallback for FieldValue or other types during optimistic updates.
   if (timestamp && typeof timestamp.toMillis === 'function') {
     return timestamp.toMillis();
   }
-  // For serverTimestamp(), return a recent time to keep it at the bottom.
   return Date.now();
 };
 
@@ -66,7 +63,6 @@ export function ChatInterface() {
     useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
 
   const messages = useMemo(() => {
-    // Prevent combining local and firestore messages if local messages are cleared
     if (localMessages.length === 0 && firestoreMessages && firestoreMessages.length > 0 && !isUserLoading) {
         const fsMessages = (firestoreMessages || []).map((m) => ({
             ...m,
@@ -82,16 +78,14 @@ export function ChatInterface() {
       timestamp: m.timestamp,
     }));
 
-    // Combine and filter duplicates.
     const combined = [...fsMessages, ...localMessages];
     const uniqueMessages = combined.reduce((acc, current) => {
       if (!acc.some((item) => item.id === current.id)) {
         acc.push(current);
       }
       return acc;
-    }, [] as Message[],);
+    }, [] as Message[]);
 
-    // Sort all messages by timestamp
     uniqueMessages.sort(
       (a, b) => getTimestampMillis(a.timestamp) - getTimestampMillis(b.timestamp)
     );
@@ -124,12 +118,11 @@ export function ChatInterface() {
       id: tempUserMessageId,
       role: 'user',
       content: input,
-      timestamp: new Date(), // Temporary timestamp for sorting
+      timestamp: new Date(),
     };
     
     const currentMessages = messages.length > 0 ? messages : localMessages;
 
-    // Optimistically add user message for non-logged-in users
     if (!user) {
       setLocalMessages((prev) => [...prev, userMessage]);
     } else if (messagesCollectionRef) {
@@ -145,7 +138,7 @@ export function ChatInterface() {
       id: assistantId,
       role: 'assistant',
       content: '',
-      timestamp: new Date(Date.now() + 1), // ensure it's after user message
+      timestamp: new Date(Date.now() + 1),
     };
 
      if (!user) {
@@ -205,7 +198,7 @@ export function ChatInterface() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div className="flex h-full flex-col bg-background">
       <Header title="Intelligent Chat">
          <div className='flex items-center gap-2'>
             {user && (
@@ -222,37 +215,37 @@ export function ChatInterface() {
 
       <div className="flex-1 flex flex-col overflow-y-hidden">
         {!hasMessages && !isLoadingHistory ? (
-          <div className="flex flex-1 flex-col items-center justify-center">
-            <div className="w-full max-w-md text-center">
-              <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
-              <h2 className="mb-2 text-2xl font-semibold text-foreground">
-                Intel.gpt
-              </h2>
-              <p className="mb-6 text-muted-foreground">
-                Your AI-powered legal intelligence assistant.
-              </p>
-              {!isUserLoading && !user && (
-                <div>
-                  <p className="mb-4 text-base text-foreground">
-                    Log in to save your conversations.
-                  </p>
-                  <div className="flex justify-center gap-4">
-                    <Button asChild>
-                      <Link href="/login">
-                        <LogIn className="mr-2" />
-                        Log In
-                      </Link>
-                    </Button>
-                    <Button asChild variant="secondary">
-                      <Link href="/signup">
-                        <UserPlus className="mr-2" />
-                        Sign Up
-                      </Link>
-                    </Button>
+          <div className="flex flex-1 flex-col items-center justify-center p-4">
+              <div className="w-full max-w-md text-center">
+                <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
+                <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                  Intel.gpt
+                </h2>
+                <p className="mb-6 text-muted-foreground">
+                  Your AI-powered legal intelligence assistant.
+                </p>
+                {!isUserLoading && !user && (
+                  <div>
+                    <p className="mb-4 text-base text-foreground">
+                      Log in to save your conversations.
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <Button asChild>
+                        <Link href="/login">
+                          <LogIn className="mr-2" />
+                          Log In
+                        </Link>
+                      </Button>
+                      <Button asChild variant="secondary">
+                        <Link href="/signup">
+                          <UserPlus className="mr-2" />
+                          Sign Up
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
           </div>
         ) : (
           <ScrollArea className="h-full" viewportRef={viewportRef}>
@@ -288,7 +281,7 @@ export function ChatInterface() {
         )}
       </div>
 
-      <div className="border-t bg-background px-4 py-3 md:px-6 md:py-4">
+      <div className="shrink-0 border-t bg-background px-4 py-3 md:py-4">
         <div className='mx-auto max-w-4xl'>
             <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>

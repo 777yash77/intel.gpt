@@ -1,19 +1,16 @@
-import {
-  Sidebar,
-  SidebarProvider,
-} from '@/components/ui/sidebar';
+import { Sidebar, SidebarProvider } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex min-h-dvh">
+      <div className="flex h-dvh">
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <div className="flex-1 flex flex-col">
+        <main className="flex flex-1 flex-col overflow-hidden">
           {children}
-        </div>
+        </main>
       </div>
     </SidebarProvider>
   );
