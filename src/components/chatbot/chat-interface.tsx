@@ -225,72 +225,72 @@ export function ChatInterface() {
         </Button>
       </Header>
 
-      <div className="relative flex-1 overflow-hidden">
-        <ScrollArea className="absolute inset-0" viewportRef={viewportRef}>
-          {!hasMessages && !isLoadingHistory ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="max-w-md text-center">
-                <Bot className="mx-auto mb-4 size-12 text-muted-foreground" />
-                <h2 className="mb-2 text-2xl font-semibold text-foreground">
-                  Intel.gpt
-                </h2>
-                <p className="mb-6 text-muted-foreground">
-                  Your AI-powered legal intelligence assistant.
-                </p>
-                {!isUserLoading && !user && (
-                  <div>
-                    <p className="mb-3 text-base text-foreground">
-                      Log in to save your conversations.
-                    </p>
-                    <div className="flex justify-center gap-4">
-                      <Button asChild>
-                        <Link href="/login">
-                          <LogIn className="mr-2" />
-                          Log In
-                        </Link>
-                      </Button>
-                      <Button asChild variant="secondary">
-                        <Link href="/signup">
-                          <UserPlus className="mr-2" />
-                          Sign Up
-                        </Link>
-                      </Button>
-                    </div>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {!hasMessages && !isLoadingHistory ? (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="max-w-md text-center">
+              <Bot className="mx-auto mb-4 size-12 text-muted-foreground" />
+              <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                Intel.gpt
+              </h2>
+              <p className="mb-6 text-muted-foreground">
+                Your AI-powered legal intelligence assistant.
+              </p>
+              {!isUserLoading && !user && (
+                <div>
+                  <p className="mb-3 text-base text-foreground">
+                    Log in to save your conversations.
+                  </p>
+                  <div className="flex justify-center gap-4">
+                    <Button asChild>
+                      <Link href="/login">
+                        <LogIn className="mr-2" />
+                        Log In
+                      </Link>
+                    </Button>
+                    <Button asChild variant="secondary">
+                      <Link href="/signup">
+                        <UserPlus className="mr-2" />
+                        Sign Up
+                      </Link>
+                    </Button>
                   </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-              {isLoadingHistory && !hasMessages && (
-                <>
-                  <div className="flex items-start justify-end gap-4">
-                    <div className="flex-1 space-y-2 max-w-[75%]">
-                      <Skeleton className="h-12 w-full" />
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <Skeleton className="size-10 rounded-full" />
-                    <div className="flex-1 space-y-2 max-w-[75%]">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-12 w-full" />
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
-              {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-              {isLoading &&
-                (!messages.length ||
-                  messages[messages.length - 1]?.role !== 'assistant') && (
-                  <ChatMessage
-                    message={{ id: 'thinking', role: 'assistant', content: '' }}
-                  />
-                )}
             </div>
-          )}
-        </ScrollArea>
+          </div>
+        ) : (
+          <ScrollArea className="flex-1" viewportRef={viewportRef}>
+            <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+                {isLoadingHistory && !hasMessages && (
+                  <>
+                    <div className="flex items-start justify-end gap-4">
+                      <div className="flex-1 space-y-2 max-w-[75%]">
+                        <Skeleton className="h-12 w-full" />
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <Skeleton className="size-10 rounded-full" />
+                      <div className="flex-1 space-y-2 max-w-[75%]">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-12 w-full" />
+                      </div>
+                    </div>
+                  </>
+                )}
+                {messages.map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
+                {isLoading &&
+                  (!messages.length ||
+                    messages[messages.length - 1]?.role !== 'assistant') && (
+                    <ChatMessage
+                      message={{ id: 'thinking', role: 'assistant', content: '' }}
+                    />
+                  )}
+            </div>
+          </ScrollArea>
+        )}
       </div>
 
       <div className="border-t bg-background px-4 py-3 md:px-6 md:py-4">
