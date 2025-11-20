@@ -182,9 +182,10 @@ export function ChatInterface() {
   return (
     <div className="relative flex h-full flex-col bg-card">
       <div className="container mx-auto flex flex-1 flex-col overflow-hidden p-4 md:p-6">
-        <ScrollArea className="flex-grow" viewportRef={viewportRef}>
+        <ScrollArea className="flex-1" viewportRef={viewportRef}>
+          <div className="h-full pr-4">
             {hasMessages ? (
-              <div className="space-y-6 pr-4">
+              <div className="space-y-6">
                 {(isLoadingHistory && !messages.length) && (
                   <>
                     <div className="flex items-start gap-4 justify-end">
@@ -214,15 +215,19 @@ export function ChatInterface() {
               <div className="flex flex-1 h-full items-center justify-center">
                 {!isUserLoading && !user && !isLoading && (
                     <div className="text-center text-muted-foreground">
-                        <p>
-                            <Link href="/login" className="underline text-primary">Log in</Link> or{' '}
-                            <Link href="/signup" className="underline text-primary">sign up</Link>
-                            {' '}to save your chat history.
-                        </p>
+                      <p className="text-lg mb-2">
+                        ✍️ Ready to save your conversations? 💾
+                      </p>
+                      <p>
+                          <Link href="/login" className="font-semibold text-primary hover:underline">Log in</Link> or{' '}
+                          <Link href="/signup" className="font-semibold text-primary hover:underline">sign up</Link>
+                          {' '}to keep your chat history.
+                      </p>
                     </div>
                 )}
               </div>
             )}
+          </div>
         </ScrollArea>
       </div>
       <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
