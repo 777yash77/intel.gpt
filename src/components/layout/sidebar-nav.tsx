@@ -11,6 +11,7 @@ import {
   MessageSquare,
   BookText,
   UserPlus,
+  FilePenLine,
 } from 'lucide-react';
 
 import {
@@ -89,6 +90,17 @@ export function SidebarNav() {
                 <FileText />
                 <span>Document Analysis</span>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip={{ children: 'Lexora Drafts', side: 'right' }}
+            >
+              <a href="https://lexinteldocs.vercel.app/draft" target="_blank" rel="noopener noreferrer">
+                <FilePenLine />
+                <span>Lexora Drafts</span>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
