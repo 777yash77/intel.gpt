@@ -238,7 +238,7 @@ export function ChatInterface() {
                       Your AI-powered legal intelligence assistant.
                     </p>
                     {!isUserLoading && !user && (
-                      <div className="rounded-lg border bg-card p-4 text-card-foreground">
+                      <div className="text-card-foreground">
                         <p className="mb-3 text-base">
                           Log in to save your conversations.
                         </p>
