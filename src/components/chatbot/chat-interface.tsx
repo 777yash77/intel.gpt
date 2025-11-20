@@ -22,7 +22,7 @@ import {
   FieldValue,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Bot, Save } from 'lucide-react';
+import { Bot, Plus } from 'lucide-react';
 import { Header } from '../layout/header';
 
 export type Message = {
@@ -67,6 +67,16 @@ export function ChatInterface() {
     useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
 
   const messages = useMemo(() => {
+    // Prevent combining local and firestore messages if local messages are cleared
+    if (localMessages.length === 0 && firestoreMessages && firestoreMessages.length > 0 && !isUserLoading) {
+        const fsMessages = (firestoreMessages || []).map((m) => ({
+            ...m,
+            id: m.id,
+        }));
+        fsMessages.sort((a, b) => getTimestampMillis(a.timestamp) - getTimestampMillis(b.timestamp));
+        return fsMessages;
+    }
+
     const fsMessages = (firestoreMessages || []).map((m) => ({
       ...m,
       id: m.id,
@@ -88,7 +98,14 @@ export function ChatInterface() {
     );
 
     return uniqueMessages;
-  }, [localMessages, firestoreMessages]);
+  }, [localMessages, firestoreMessages, isUserLoading]);
+  
+  const handleNewChat = () => {
+    setLocalMessages([]);
+    // This will clear the UI. If the user is logged in, a page refresh
+    // would bring back the history from Firestore.
+    // This provides a "soft reset" for the current session.
+  }
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -113,6 +130,8 @@ export function ChatInterface() {
       content: input,
       timestamp: new Date(), // Temporary timestamp for sorting
     };
+    
+    const currentMessages = messages.length > 0 ? messages : localMessages;
 
     // Optimistically add user message for non-logged-in users
     if (!user) {
@@ -136,7 +155,11 @@ export function ChatInterface() {
     };
 
     // Optimistically add the empty assistant message to show the "thinking" state
-    setLocalMessages((prev) => [...prev, assistantMessage]);
+     if (!user) {
+        setLocalMessages((prev) => [...prev, assistantMessage]);
+     } else {
+        setLocalMessages([...currentMessages, userMessage, assistantMessage])
+     }
 
     try {
       const stream = await streamLegalAIChatbot({ query: input });
@@ -157,18 +180,13 @@ export function ChatInterface() {
           content: fullResponse,
           timestamp: serverTimestamp(),
         });
-      }
-
-      // Now that streaming is complete and data is saved (if logged in),
-      // we can remove the temporary local messages (user and assistant)
-      // as they will be replaced by the single source of truth from Firestore.
-      if (user) {
-        setLocalMessages((prev) =>
-          prev.filter((m) => m.id !== tempUserMessageId && m.id !== assistantId)
-        );
+        
+         // After successful save, we can let Firestore's listener take over.
+         // We filter out the temp messages (user and assistant) from local state
+         // The user message has already been saved, the assistant message is now saved.
+        setLocalMessages(prev => prev.filter(m => m.id !== tempUserMessageId && m.id !== assistantId));
       } else {
         // If not logged in, just update the final content of the assistant message.
-        // The user message is already there.
         setLocalMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantId
@@ -200,12 +218,44 @@ export function ChatInterface() {
 
   return (
     <div className="flex h-dvh flex-col">
-      <Header title="Intelligent Chat" />
+      <Header title="Intelligent Chat">
+         <Button variant="outline" size="sm" onClick={handleNewChat}>
+            <Plus className='mr-2' />
+            New Chat
+        </Button>
+      </Header>
       <main className="flex flex-1 flex-col overflow-y-hidden">
         <ScrollArea className="flex-1" viewportRef={viewportRef}>
           <div className="h-full px-4 sm:px-6 lg:px-8">
-            {hasMessages || isLoadingHistory ? (
-               <div className="mx-auto max-w-4xl space-y-6 py-6">
+            {!hasMessages && !isLoadingHistory ? (
+               <div className="flex h-full items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <Bot className="mx-auto mb-4 size-12" />
+                    <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                      Intel.gpt
+                    </h2>
+                    <p className="mb-6">
+                      Your AI-powered legal intelligence assistant.
+                    </p>
+                    {!isUserLoading && !user && (
+                      <div className="flex flex-col items-center gap-4 rounded-lg border p-4">
+                        <p className="text-sm">
+                           Log in to save your conversations.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <Button asChild>
+                            <Link href="/login">Log In</Link>
+                          </Button>
+                          <Button asChild variant="outline">
+                            <Link href="/signup">Sign Up</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+            ) : (
+               <div className="mx-auto w-full max-w-4xl space-y-6 py-6">
                 {isLoadingHistory && !hasMessages && (
                   <>
                     <div className="flex items-start justify-end gap-4">
@@ -226,36 +276,18 @@ export function ChatInterface() {
                   <ChatMessage key={message.id} message={message} />
                 ))}
                 {isLoading &&
-                  messages[messages.length - 1]?.role !== 'assistant' && (
+                  (!messages.length || messages[messages.length - 1]?.role !== 'assistant') && (
                     <ChatMessage
                       message={{ id: 'thinking', role: 'assistant', content: '' }}
                     />
                   )}
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                {!isUserLoading && !user && !isLoading && (
-                  <div className="text-center text-muted-foreground">
-                    <p className="mb-4 text-lg">
-                      ✍️ Log in to save your conversations 💾
-                    </p>
-                    <div className="flex justify-center gap-4">
-                      <Button asChild>
-                        <Link href="/login">Log In</Link>
-                      </Button>
-                      <Button asChild variant="outline">
-                        <Link href="/signup">Sign Up</Link>
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
         </ScrollArea>
       </main>
 
-      <div className="border-t px-4 py-3 md:px-6 md:py-4">
+      <div className="border-t bg-background px-4 py-3 md:px-6 md:py-4">
         <div className="mx-auto max-w-4xl">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
