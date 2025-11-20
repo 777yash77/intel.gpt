@@ -226,42 +226,41 @@ export function ChatInterface() {
       </Header>
       <main className="flex flex-1 flex-col overflow-y-hidden">
         <ScrollArea className="flex-1" viewportRef={viewportRef}>
-          <div className="h-full px-4 sm:px-6 lg:px-8">
             {!hasMessages && !isLoadingHistory ? (
-              <div className="flex h-full flex-col items-center justify-center">
-                <div className="max-w-md text-center">
-                  <Bot className="mx-auto mb-4 size-12 text-muted-foreground" />
-                  <h2 className="mb-2 text-2xl font-semibold text-foreground">
-                    Intel.gpt
-                  </h2>
-                  <p className="mb-6 text-muted-foreground">
-                    Your AI-powered legal intelligence assistant.
-                  </p>
-                  {!isUserLoading && !user && (
-                    <div>
-                      <p className="mb-3 text-base text-foreground">
-                        Log in to save your conversations.
-                      </p>
-                      <div className="flex justify-center gap-4">
-                        <Button asChild>
-                          <Link href="/login">
-                            <LogIn className="mr-2" />
-                            Log In
-                          </Link>
-                        </Button>
-                        <Button asChild variant="secondary">
-                          <Link href="/signup">
-                            <UserPlus className="mr-2" />
-                            Sign Up
-                          </Link>
-                        </Button>
+              <div className="flex h-full w-full flex-col items-center justify-center p-4">
+                  <div className="max-w-md text-center">
+                    <Bot className="mx-auto mb-4 size-12 text-muted-foreground" />
+                    <h2 className="mb-2 text-2xl font-semibold text-foreground">
+                      Intel.gpt
+                    </h2>
+                    <p className="mb-6 text-muted-foreground">
+                      Your AI-powered legal intelligence assistant.
+                    </p>
+                    {!isUserLoading && !user && (
+                      <div>
+                        <p className="mb-3 text-base text-foreground">
+                          Log in to save your conversations.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <Button asChild>
+                            <Link href="/login">
+                              <LogIn className="mr-2" />
+                              Log In
+                            </Link>
+                          </Button>
+                          <Button asChild variant="secondary">
+                            <Link href="/signup">
+                              <UserPlus className="mr-2" />
+                              Sign Up
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
               </div>
             ) : (
-               <div className="w-full space-y-6 py-6">
+               <div className="w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
                 {isLoadingHistory && !hasMessages && (
                   <>
                     <div className="flex items-start justify-end gap-4">
@@ -289,14 +288,11 @@ export function ChatInterface() {
                   )}
               </div>
             )}
-          </div>
         </ScrollArea>
       </main>
 
       <div className="border-t bg-background px-4 py-3 md:px-6 md:py-4">
-        <div className="mx-auto w-full">
-          <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-        </div>
+        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
       </div>
     </div>
   );
