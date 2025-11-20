@@ -198,13 +198,13 @@ export function ChatInterface() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="relative flex h-full flex-col bg-card">
-      <div className="container mx-auto flex flex-1 flex-col overflow-hidden p-4 md:p-6">
-        <div className="flex flex-1 flex-col">
-          {hasMessages || isLoadingHistory || (user && !isLoadingHistory) ? (
-            <ScrollArea className="flex-1" viewportRef={viewportRef}>
+    <div className="flex h-full flex-col bg-card">
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto flex h-full flex-col p-4 md:p-6">
+          {hasMessages || isLoadingHistory ? (
+            <ScrollArea className="flex-grow" viewportRef={viewportRef}>
               <div className="space-y-6 pr-4">
-                {isLoadingHistory && !messages.length && (
+                {isLoadingHistory && !hasMessages && (
                   <>
                     <div className="flex items-start justify-end gap-4">
                       <div className="flex-1 space-y-2 max-w-[75%]">
@@ -234,19 +234,19 @@ export function ChatInterface() {
           ) : (
             <div className="flex flex-1 items-center justify-center">
               {!isUserLoading && !user && !isLoading && (
-                <div className="text-center text-muted-foreground">
-                  <p className="mb-4 text-lg">
-                    ✍️ Log in to save your conversations 💾
-                  </p>
-                  <div className="flex justify-center gap-4">
-                    <Button asChild>
-                      <Link href="/login">Log In</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link href="/signup">Sign Up</Link>
-                    </Button>
+                 <div className="text-center text-muted-foreground">
+                    <p className="mb-4 text-lg">
+                      ✍️ Log in to save your conversations 💾
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <Button asChild>
+                        <Link href="/login">Log In</Link>
+                      </Button>
+                      <Button asChild variant="outline">
+                        <Link href="/signup">Sign Up</Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
               )}
             </div>
           )}

@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="flex h-dvh flex-col">
       <Header title="Intelligent Chat" />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex flex-1 flex-col overflow-hidden">
         <ChatInterface />
       </main>
     </div>
