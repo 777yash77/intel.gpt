@@ -27,7 +27,7 @@ function ChatMessageComponent({ message }: { message: Message }) {
       )}
       <div
         className={cn(
-          'max-w-[85%] rounded-lg p-3 text-sm shadow-sm md:max-w-[75%]',
+          'max-w-[85%] rounded-lg p-3 text-sm shadow-sm',
           isUser
             ? 'rounded-br-none bg-primary text-primary-foreground'
             : 'rounded-bl-none bg-transparent',

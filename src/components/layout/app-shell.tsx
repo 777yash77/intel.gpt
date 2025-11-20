@@ -4,11 +4,11 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex h-dvh">
+      <div className="flex h-dvh w-full">
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <main className="flex flex-1 flex-col overflow-hidden">
+        <main className="flex-1 overflow-hidden">
           {children}
         </main>
       </div>

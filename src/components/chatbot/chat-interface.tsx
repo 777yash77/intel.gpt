@@ -215,37 +215,35 @@ export function ChatInterface() {
 
       <div className="flex-1 flex flex-col overflow-y-hidden">
         {!hasMessages && !isLoadingHistory ? (
-          <div className="flex flex-1 flex-col items-center justify-center p-4">
-              <div className="w-full max-w-md text-center">
-                <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
-                <h2 className="mb-2 text-2xl font-semibold text-foreground">
-                  Intel.gpt
-                </h2>
-                <p className="mb-6 text-muted-foreground">
-                  Your AI-powered legal intelligence assistant.
+          <div className="flex flex-1 flex-col items-center justify-center p-4 text-center">
+            <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
+            <h2 className="mb-2 text-2xl font-semibold text-foreground">
+              Intel.gpt
+            </h2>
+            <p className="mb-6 text-muted-foreground">
+              Your AI-powered legal intelligence assistant.
+            </p>
+            {!isUserLoading && !user && (
+              <div>
+                <p className="mb-4 text-base text-foreground">
+                  Log in to save your conversations.
                 </p>
-                {!isUserLoading && !user && (
-                  <div>
-                    <p className="mb-4 text-base text-foreground">
-                      Log in to save your conversations.
-                    </p>
-                    <div className="flex justify-center gap-4">
-                      <Button asChild>
-                        <Link href="/login">
-                          <LogIn className="mr-2" />
-                          Log In
-                        </Link>
-                      </Button>
-                      <Button asChild variant="secondary">
-                        <Link href="/signup">
-                          <UserPlus className="mr-2" />
-                          Sign Up
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <div className="flex justify-center gap-4">
+                  <Button asChild>
+                    <Link href="/login">
+                      <LogIn className="mr-2" />
+                      Log In
+                    </Link>
+                  </Button>
+                  <Button asChild variant="secondary">
+                    <Link href="/signup">
+                      <UserPlus className="mr-2" />
+                      Sign Up
+                    </Link>
+                  </Button>
+                </div>
               </div>
+            )}
           </div>
         ) : (
           <ScrollArea className="h-full" viewportRef={viewportRef}>
@@ -253,13 +251,13 @@ export function ChatInterface() {
               {isLoadingHistory && !hasMessages && (
                 <>
                   <div className="flex items-start justify-end gap-4">
-                    <div className="flex-1 space-y-2 max-w-[75%]">
+                    <div className="flex-1 space-y-2">
                       <Skeleton className="h-12 w-full" />
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <Skeleton className="size-10 rounded-full" />
-                    <div className="flex-1 space-y-2 max-w-[75%]">
+                    <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-32" />
                       <Skeleton className="h-12 w-full" />
                     </div>
