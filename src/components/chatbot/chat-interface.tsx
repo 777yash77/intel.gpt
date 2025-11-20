@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Bot, Plus, LogIn, UserPlus, History as HistoryIcon } from 'lucide-react';
 import { Header } from '../layout/header';
+import { Icons } from '../icons';
 
 export type Message = {
   id: string;
@@ -232,11 +233,11 @@ export function ChatInterface() {
          </div>
       </Header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-y-auto">
         {!hasMessages && !isLoadingHistory ? (
-          <div className="flex h-full w-full items-center justify-center">
+          <div className="flex flex-1 items-center justify-center">
             <div className="max-w-md text-center">
-              <Bot className="mx-auto mb-4 size-12 text-primary" />
+              <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
               <h2 className="mb-2 text-2xl font-semibold text-foreground">
                 Intel.gpt
               </h2>
