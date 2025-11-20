@@ -249,7 +249,7 @@ export function ChatInterface() {
           </div>
         ) : (
           <ScrollArea className="h-full" viewportRef={viewportRef}>
-            <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+            <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
               {isLoadingHistory && !hasMessages && (
                 <>
                   <div className="flex items-start justify-end gap-4">
@@ -282,7 +282,7 @@ export function ChatInterface() {
       </div>
 
       <div className="shrink-0 border-t bg-background px-4 py-3 md:py-4">
-        <div className='mx-auto max-w-4xl'>
+        <div className='w-full'>
             <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>
       </div>

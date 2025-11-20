@@ -40,7 +40,7 @@ function ChatMessageComponent({ message }: { message: Message }) {
             <p className='text-muted-foreground'>Intel.gpt is thinking...</p>
         ) : (
           <div
-            className="prose prose-sm dark:prose-invert max-w-none"
+            className="prose-sm dark:prose-invert max-w-none"
           >
             <Remark>{message.content}</Remark>
           </div>
