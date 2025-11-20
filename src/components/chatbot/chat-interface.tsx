@@ -22,7 +22,7 @@ import {
   FieldValue,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Bot, Plus } from 'lucide-react';
+import { Bot, Plus, LogIn, UserPlus } from 'lucide-react';
 import { Header } from '../layout/header';
 
 export type Message = {
@@ -217,7 +217,7 @@ export function ChatInterface() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-dvh flex-col bg-background">
       <Header title="Intelligent Chat">
          <Button variant="outline" size="sm" onClick={handleNewChat}>
             <Plus className='mr-2' />
@@ -229,25 +229,31 @@ export function ChatInterface() {
           <div className="h-full px-4 sm:px-6 lg:px-8">
             {!hasMessages && !isLoadingHistory ? (
                <div className="flex h-full items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <Bot className="mx-auto mb-4 size-12" />
+                  <div className="max-w-md text-center">
+                    <Bot className="mx-auto mb-4 size-12 text-muted-foreground" />
                     <h2 className="mb-2 text-2xl font-semibold text-foreground">
                       Intel.gpt
                     </h2>
-                    <p className="mb-6">
+                    <p className="mb-6 text-muted-foreground">
                       Your AI-powered legal intelligence assistant.
                     </p>
                     {!isUserLoading && !user && (
-                      <div className="flex flex-col items-center gap-4 rounded-lg border p-4">
-                        <p className="text-sm">
-                           Log in to save your conversations.
+                      <div className="rounded-lg border bg-card p-4 text-card-foreground">
+                        <p className="mb-4 text-lg">
+                          ✍️ Log in to save your conversations.
                         </p>
                         <div className="flex justify-center gap-4">
                           <Button asChild>
-                            <Link href="/login">Log In</Link>
+                            <Link href="/login">
+                              <LogIn className="mr-2" />
+                              Log In
+                            </Link>
                           </Button>
                           <Button asChild variant="outline">
-                            <Link href="/signup">Sign Up</Link>
+                            <Link href="/signup">
+                              <UserPlus className="mr-2" />
+                              Sign Up
+                            </Link>
                           </Button>
                         </div>
                       </div>
