@@ -14,7 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <SidebarInset className="flex-1">{children}</SidebarInset>
+        <SidebarInset>{children}</SidebarInset>
       </div>
     </SidebarProvider>
   );
