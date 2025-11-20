@@ -5,17 +5,18 @@ import {
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  // The defaultOpen prop is read from a cookie `sidebar_state`
-  // so that the sidebar state is preserved between page loads.
+  // This simplified structure ensures a two-column layout:
+  // 1. A fixed sidebar.
+  // 2. A main content area that fills the remaining space.
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-dvh">
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <main className="relative flex flex-1 flex-col bg-background">
+        <div className="flex-1 flex flex-col">
           {children}
-        </main>
+        </div>
       </div>
     </SidebarProvider>
   );

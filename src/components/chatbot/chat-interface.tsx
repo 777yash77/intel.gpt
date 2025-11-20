@@ -217,6 +217,7 @@ export function ChatInterface() {
 
   const hasMessages = messages.length > 0;
 
+  // This is the new edge-to-edge layout structure
   return (
     <div className="flex h-dvh flex-col bg-background">
       <Header title="Intelligent Chat">
@@ -233,8 +234,9 @@ export function ChatInterface() {
          </div>
       </Header>
 
-      <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-y-hidden">
         {!hasMessages && !isLoadingHistory ? (
+          // Empty State: Centered content
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-md text-center">
               <Icons.logo className="mx-auto mb-4 size-12 text-primary" />
@@ -268,6 +270,7 @@ export function ChatInterface() {
             </div>
           </div>
         ) : (
+          // Active Chat State
           <ScrollArea className="h-full" viewportRef={viewportRef}>
             <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
               {isLoadingHistory && !hasMessages && (
