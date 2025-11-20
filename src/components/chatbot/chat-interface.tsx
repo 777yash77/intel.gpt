@@ -8,8 +8,20 @@ import { ChatMessage } from './chat-message';
 import { ChatInput } from './chat-input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { addDocumentNonBlocking, useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore';
+import {
+  addDocumentNonBlocking,
+  useCollection,
+  useUser,
+  useFirestore,
+  useMemoFirebase,
+} from '@/firebase';
+import {
+  collection,
+  serverTimestamp,
+  Timestamp,
+  FieldValue,
+} from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 
 export type Message = {
   id: string;
@@ -29,13 +41,12 @@ const getTimestampMillis = (timestamp: any): number => {
   // Fallback for FieldValue or other types during optimistic updates.
   // It won't be perfectly sorted until the server value arrives, but it's better than crashing.
   if (timestamp && typeof timestamp.toMillis === 'function') {
-      return timestamp.toMillis();
+    return timestamp.toMillis();
   }
   // For serverTimestamp(), return a recent time to keep it at the bottom.
   // This is an optimistic placement.
   return Date.now();
 };
-
 
 export function ChatInterface() {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
@@ -50,30 +61,32 @@ export function ChatInterface() {
     return collection(firestore, 'users', user.uid, 'chat_messages');
   }, [firestore, user]);
 
-  const { data: firestoreMessages, isLoading: isLoadingHistory } = useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
+  const { data: firestoreMessages, isLoading: isLoadingHistory } =
+    useCollection<Omit<Message, 'id'>>(messagesCollectionRef);
 
   const messages = useMemo(() => {
-    const fsMessages = (firestoreMessages || []).map(m => ({
+    const fsMessages = (firestoreMessages || []).map((m) => ({
       ...m,
       id: m.id,
-      timestamp: m.timestamp
+      timestamp: m.timestamp,
     }));
-  
+
     // Combine and filter duplicates.
     const combined = [...fsMessages, ...localMessages];
     const uniqueMessages = combined.reduce((acc, current) => {
-      if (!acc.some(item => item.id === current.id)) {
+      if (!acc.some((item) => item.id === current.id)) {
         acc.push(current);
       }
       return acc;
     }, [] as Message[]);
-    
+
     // Sort all messages by timestamp
-    uniqueMessages.sort((a, b) => getTimestampMillis(a.timestamp) - getTimestampMillis(b.timestamp));
-    
+    uniqueMessages.sort(
+      (a, b) => getTimestampMillis(a.timestamp) - getTimestampMillis(b.timestamp)
+    );
+
     return uniqueMessages;
   }, [localMessages, firestoreMessages]);
-
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -86,22 +99,22 @@ export function ChatInterface() {
 
   const handleSendMessage = async (input: string) => {
     if (!input.trim() || isLoading) return;
-  
+
     setIsLoading(true);
-    
+
     const userMessageTimestamp = serverTimestamp();
     const tempUserMessageId = `local-user-${Date.now()}`;
 
     const userMessage: Message = {
-        id: tempUserMessageId,
-        role: 'user',
-        content: input,
-        timestamp: new Date(), // Temporary timestamp for sorting
+      id: tempUserMessageId,
+      role: 'user',
+      content: input,
+      timestamp: new Date(), // Temporary timestamp for sorting
     };
 
     // Optimistically add user message for non-logged-in users
     if (!user) {
-        setLocalMessages((prev) => [...prev, userMessage]);
+      setLocalMessages((prev) => [...prev, userMessage]);
     } else if (messagesCollectionRef) {
       // For logged-in users, write to Firestore and let the listener handle the UI update.
       // We don't add to localMessages here to prevent duplication.
@@ -111,7 +124,7 @@ export function ChatInterface() {
         timestamp: userMessageTimestamp,
       });
     }
-  
+
     const assistantId = `assistant-${Date.now()}`;
     const assistantMessage: Message = {
       id: assistantId,
@@ -119,10 +132,10 @@ export function ChatInterface() {
       content: '',
       timestamp: new Date(Date.now() + 1), // ensure it's after user message
     };
-    
+
     // Optimistically add the empty assistant message to show the "thinking" state
     setLocalMessages((prev) => [...prev, assistantMessage]);
-  
+
     try {
       const stream = await streamLegalAIChatbot({ query: input });
       let fullResponse = '';
@@ -134,7 +147,7 @@ export function ChatInterface() {
           )
         );
       }
-  
+
       if (user && messagesCollectionRef) {
         // Save the full response to Firestore.
         addDocumentNonBlocking(messagesCollectionRef, {
@@ -143,25 +156,29 @@ export function ChatInterface() {
           timestamp: serverTimestamp(),
         });
       }
-  
+
       // Now that streaming is complete and data is saved (if logged in),
       // we can remove the temporary local messages (user and assistant)
       // as they will be replaced by the single source of truth from Firestore.
-      if(user) {
-        setLocalMessages(prev => prev.filter(m => m.id !== tempUserMessageId && m.id !== assistantId));
+      if (user) {
+        setLocalMessages((prev) =>
+          prev.filter((m) => m.id !== tempUserMessageId && m.id !== assistantId)
+        );
       } else {
         // If not logged in, just update the final content of the assistant message.
         // The user message is already there.
         setLocalMessages((prev) =>
           prev.map((msg) =>
-            msg.id === assistantId ? { ...msg, content: fullResponse, timestamp: new Date() } : msg
+            msg.id === assistantId
+              ? { ...msg, content: fullResponse, timestamp: new Date() }
+              : msg
           )
         );
       }
-  
     } catch (error) {
       console.error('Error interacting with chatbot:', error);
-      const errorMsg = "The assistant failed to respond. This can happen due to high demand or API rate limits. Please wait a moment and try again.";
+      const errorMsg =
+        'The assistant failed to respond. This can happen due to high demand or API rate limits. Please wait a moment and try again.';
       setLocalMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantId ? { ...msg, content: errorMsg } : msg
@@ -170,7 +187,7 @@ export function ChatInterface() {
       toast({
         variant: 'destructive',
         title: 'Assistant Error',
-        description: "Failed to get a response from the assistant.",
+        description: 'Failed to get a response from the assistant.',
       });
     } finally {
       setIsLoading(false);
@@ -183,15 +200,15 @@ export function ChatInterface() {
     <div className="relative flex h-full flex-col bg-card">
       <div className="container mx-auto flex flex-1 flex-col overflow-hidden p-4 md:p-6">
         <ScrollArea className="flex-1" viewportRef={viewportRef}>
-          <div className="h-full pr-4">
+          <div className="flex h-full flex-1 pr-4">
             {hasMessages ? (
-              <div className="space-y-6">
-                {(isLoadingHistory && !messages.length) && (
+              <div className="w-full space-y-6">
+                {isLoadingHistory && !messages.length && (
                   <>
-                    <div className="flex items-start gap-4 justify-end">
-                        <div className="flex-1 space-y-2 max-w-[75%]">
-                          <Skeleton className="h-12 w-full" />
-                        </div>
+                    <div className="flex items-start justify-end gap-4">
+                      <div className="flex-1 space-y-2 max-w-[75%]">
+                        <Skeleton className="h-12 w-full" />
+                      </div>
                     </div>
                     <div className="flex items-start gap-4">
                       <Skeleton className="size-10 rounded-full" />
@@ -205,25 +222,29 @@ export function ChatInterface() {
                 {messages.map((message) => (
                   <ChatMessage key={message.id} message={message} />
                 ))}
-                {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-                     <ChatMessage 
-                        message={{ id: 'thinking', role: 'assistant', content: '' }} 
-                     />
-                )}
+                {isLoading &&
+                  messages[messages.length - 1]?.role !== 'assistant' && (
+                    <ChatMessage
+                      message={{ id: 'thinking', role: 'assistant', content: '' }}
+                    />
+                  )}
               </div>
             ) : (
-              <div className="flex flex-1 h-full items-center justify-center">
+              <div className="flex flex-1 items-center justify-center">
                 {!isUserLoading && !user && !isLoading && (
-                    <div className="text-center text-muted-foreground">
-                      <p className="text-lg mb-2">
-                        ✍️ Ready to save your conversations? 💾
-                      </p>
-                      <p>
-                          <Link href="/login" className="font-semibold text-primary hover:underline">Log in</Link> or{' '}
-                          <Link href="/signup" className="font-semibold text-primary hover:underline">sign up</Link>
-                          {' '}to keep your chat history.
-                      </p>
+                  <div className="text-center text-muted-foreground">
+                    <p className="mb-4 text-lg">
+                      ✍️ Ready to save your conversations? 💾
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <Button asChild>
+                        <Link href="/login">Log In</Link>
+                      </Button>
+                      <Button asChild variant="outline">
+                        <Link href="/signup">Sign Up</Link>
+                      </Button>
                     </div>
+                  </div>
                 )}
               </div>
             )}
