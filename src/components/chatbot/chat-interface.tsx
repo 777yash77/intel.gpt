@@ -22,6 +22,7 @@ import {
   FieldValue,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
+import { Bot, Save } from 'lucide-react';
 
 export type Message = {
   id: string;
@@ -200,7 +201,7 @@ export function ChatInterface() {
     <div className="relative flex h-full flex-col bg-card">
       <div className="container mx-auto flex flex-1 flex-col overflow-hidden p-4 md:p-6">
         <ScrollArea className="flex-1" viewportRef={viewportRef}>
-          <div className="flex h-full flex-1 pr-4">
+          <div className="flex h-full flex-1 flex-col pr-4">
             {hasMessages ? (
               <div className="w-full space-y-6">
                 {isLoadingHistory && !messages.length && (
@@ -234,7 +235,7 @@ export function ChatInterface() {
                 {!isUserLoading && !user && !isLoading && (
                   <div className="text-center text-muted-foreground">
                     <p className="mb-4 text-lg">
-                      ✍️ Ready to save your conversations? 💾
+                      ✍️ Log in to save your conversations 💾
                     </p>
                     <div className="flex justify-center gap-4">
                       <Button asChild>
