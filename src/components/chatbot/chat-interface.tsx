@@ -198,61 +198,60 @@ export function ChatInterface() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="flex h-full flex-col bg-card">
-      <div className="flex flex-1 flex-col overflow-y-auto">
-        <div className="container mx-auto flex h-full flex-col p-4 md:p-6">
-          {hasMessages || isLoadingHistory ? (
-            <ScrollArea className="flex-grow" viewportRef={viewportRef}>
-              <div className="space-y-6 pr-4">
-                {isLoadingHistory && !hasMessages && (
-                  <>
-                    <div className="flex items-start justify-end gap-4">
-                      <div className="flex-1 space-y-2 max-w-[75%]">
-                        <Skeleton className="h-12 w-full" />
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <Skeleton className="size-10 rounded-full" />
-                      <div className="flex-1 space-y-2 max-w-[75%]">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-12 w-full" />
-                      </div>
-                    </div>
-                  </>
-                )}
-                {messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
-                ))}
-                {isLoading &&
-                  messages[messages.length - 1]?.role !== 'assistant' && (
-                    <ChatMessage
-                      message={{ id: 'thinking', role: 'assistant', content: '' }}
-                    />
-                  )}
-              </div>
-            </ScrollArea>
-          ) : (
-            <div className="flex flex-1 items-center justify-center">
-              {!isUserLoading && !user && !isLoading && (
-                 <div className="text-center text-muted-foreground">
-                    <p className="mb-4 text-lg">
-                      ✍️ Log in to save your conversations 💾
-                    </p>
-                    <div className="flex justify-center gap-4">
-                      <Button asChild>
-                        <Link href="/login">Log In</Link>
-                      </Button>
-                      <Button asChild variant="outline">
-                        <Link href="/signup">Sign Up</Link>
-                      </Button>
+    <div className="flex h-full flex-1 flex-col">
+      <div className="container mx-auto flex flex-1 flex-col p-4 md:p-6">
+        {hasMessages || isLoadingHistory ? (
+          <ScrollArea className="flex-1" viewportRef={viewportRef}>
+            <div className="space-y-6 pr-4">
+              {isLoadingHistory && !hasMessages && (
+                <>
+                  <div className="flex items-start justify-end gap-4">
+                    <div className="flex-1 space-y-2 max-w-[75%]">
+                      <Skeleton className="h-12 w-full" />
                     </div>
                   </div>
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="size-10 rounded-full" />
+                    <div className="flex-1 space-y-2 max-w-[75%]">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  </div>
+                </>
               )}
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))}
+              {isLoading &&
+                messages[messages.length - 1]?.role !== 'assistant' && (
+                  <ChatMessage
+                    message={{ id: 'thinking', role: 'assistant', content: '' }}
+                  />
+                )}
             </div>
-          )}
-        </div>
+          </ScrollArea>
+        ) : (
+          <div className="flex flex-1 items-center justify-center">
+            {!isUserLoading && !user && !isLoading && (
+              <div className="text-center text-muted-foreground">
+                <p className="mb-4 text-lg">
+                  ✍️ Log in to save your conversations 💾
+                </p>
+                <div className="flex justify-center gap-4">
+                  <Button asChild>
+                    <Link href="/login">Log In</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/signup">Sign Up</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <div className="border-t bg-background/50 p-4 backdrop-blur-sm md:p-6">
+
+      <div className="p-4 md:p-6">
         <div className="container mx-auto">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
         </div>

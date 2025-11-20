@@ -30,7 +30,7 @@ function ChatMessageComponent({ message }: { message: Message }) {
           'max-w-[85%] rounded-lg p-3 text-sm shadow-sm md:max-w-[75%]',
           isUser
             ? 'rounded-br-none bg-primary text-primary-foreground'
-            : 'rounded-bl-none bg-card',
+            : 'rounded-bl-none bg-transparent',
           isThinking ? 'animate-pulse' : ''
         )}
       >
