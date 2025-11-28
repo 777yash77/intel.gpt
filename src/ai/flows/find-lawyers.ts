@@ -10,7 +10,6 @@
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
-import { findPlaces } from 'genkitx-google-maps';
 
 export const FindLawyersInputSchema = z.object({
   query: z.string().describe('The city or location to search for lawyers.'),
@@ -29,32 +28,18 @@ export const FindLawyersOutputSchema = z.object({
 });
 export type FindLawyersOutput = z.infer<typeof FindLawyersOutputSchema>;
 
-const findLawyersTool = ai.defineTool(
-  {
-    name: 'findLawyersTool',
-    description: 'Finds lawyers and law firms in a given city or location.',
-    inputSchema: z.object({
-      query: z.string(),
-    }),
-    outputSchema: z.any(),
-  },
-  async (input) => {
-    // Use a tool that can search for places, like Google Maps.
-    // The prompt will guide the AI to use this for finding lawyers.
-    return await findPlaces({
-      query: `lawyers in ${input.query}`,
-    });
-  }
-);
-
-
 const findLawyersPrompt = ai.definePrompt({
   name: 'findLawyersPrompt',
   input: { schema: FindLawyersInputSchema },
   output: { schema: FindLawyersOutputSchema },
-  tools: [findLawyersTool],
   model: 'gemini-1.5-flash-latest',
-  prompt: `Find lawyers in {{query}}. For each lawyer or firm, extract the name, formatted address, and international phone number.`,
+  prompt: `You are an expert in local business directory services. Your task is to find a list of lawyers or law firms in a given location.
+
+  Given the location: {{query}}
+
+  Please provide a list of 5 lawyers or law firms. For each one, provide the name, a plausible but fake address in the specified city, and a plausible but fake phone number.
+
+  Respond ONLY with the JSON object as defined in the output schema.`,
 });
 
 
@@ -65,21 +50,11 @@ const findLawyersFlow = ai.defineFlow(
     outputSchema: FindLawyersOutputSchema,
   },
   async (input) => {
-    const llmResponse = await findLawyersPrompt(input);
-
-    const toolResponse = llmResponse.toolRequest?.output;
-    if (!toolResponse) {
-      // Handle the case where the tool doesn't run, maybe return empty or throw error
+    const { output } = await findLawyersPrompt(input);
+    if (!output) {
       return { lawyers: [] };
     }
-
-    const lawyers = toolResponse.map((place: any) => ({
-      name: place.displayName?.text || 'N/A',
-      address: place.formattedAddress || 'N/A',
-      phone: place.internationalPhoneNumber || 'N/A',
-    }));
-
-    return { lawyers };
+    return output;
   }
 );
 
