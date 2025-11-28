@@ -36,7 +36,7 @@ const summarizeLegalArticlePrompt = ai.definePrompt({
 
 Document Text:
 {{{documentText}}}`,
-  model: 'gemini-pro',
+  model: googleAI.model('gemini-pro'),
 });
 
 
