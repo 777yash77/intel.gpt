@@ -13,54 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, MapPin, Phone, LocateFixed } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-
-interface Lawyer {
-  name: string;
-  address: string;
-  phone: string;
-}
-
-const mockLawyers: Omit<Lawyer, 'address'>[] = [
-    {
-        name: 'Smith & Associates',
-        phone: '(555) 123-4567',
-    },
-    {
-        name: 'Juris Consultants',
-        phone: '(555) 987-6543',
-    },
-    {
-        name: 'Justice Law Firm',
-        phone: '(555) 555-5555',
-    },
-    {
-        name: 'Legal Eagles LLP',
-        phone: '(555) 111-2222',
-    },
-    {
-        name: 'Alpha Legal Group',
-        phone: '(555) 222-3333'
-    },
-    {
-        name: 'Capital Defense',
-        phone: '(555) 444-5555'
-    }
-];
-
-// A mock function to simulate fetching lawyers based on a city.
-const fetchLawyers = async (city: string): Promise<Lawyer[]> => {
-    console.log('Fetching lawyers in:', city);
-    // In a real app, you would make an API call here.
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const lawyersWithAddress = mockLawyers.map((lawyer, i) => ({
-                ...lawyer,
-                address: `${123 + i*10} Main St, ${city}`
-            }))
-            resolve(lawyersWithAddress);
-        }, 1500);
-    });
-};
+import { findLawyers, type Lawyer } from '@/ai/flows/find-lawyers';
 
 // A mock function to simulate reverse geocoding (coordinates to city).
 const getCityFromCoords = async (lat: number, lon: number): Promise<string> => {
@@ -90,7 +43,8 @@ export function LawyerList() {
   const findAndSetLawyers = async (city: string) => {
     try {
         setLocation(city);
-        const fetchedLawyers = await fetchLawyers(city);
+        const result = await findLawyers({ query: city });
+        const fetchedLawyers = result.lawyers;
         setLawyers(fetchedLawyers);
 
         if (fetchedLawyers.length === 0) {
@@ -105,6 +59,7 @@ export function LawyerList() {
         });
         }
     } catch (apiError) {
+        console.error(apiError);
         const err = 'Failed to fetch lawyer data.';
         setError(err);
         toast({ variant: 'destructive', title: 'API Error', description: err });
