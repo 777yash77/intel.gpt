@@ -91,7 +91,7 @@ export function LawyerList() {
         let errMessage = 'An unknown error occurred.';
         switch(geoError.code) {
             case geoError.PERMISSION_DENIED:
-                errMessage = "You denied the request for Geolocation.";
+                errMessage = "You denied the request for Geolocation. To use this feature, please enable location permissions in your browser settings and refresh the page.";
                 break;
             case geoError.POSITION_UNAVAILABLE:
                 errMessage = "Location information is unavailable.";
@@ -101,7 +101,7 @@ export function LawyerList() {
                 break;
         }
         setError(errMessage);
-        toast({ variant: 'destructive', title: 'Geolocation Error', description: errMessage });
+        toast({ variant: 'destructive', title: 'Geolocation Error', description: errMessage, duration: 5000 });
         setIsLoading(false);
       }
     );
