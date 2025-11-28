@@ -48,7 +48,7 @@ Now, please provide a comprehensive and well-structured answer to the following 
 
 **USER QUERY:**
 {{query}}`,
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-1.5-flash-latest',
 });
 
 
