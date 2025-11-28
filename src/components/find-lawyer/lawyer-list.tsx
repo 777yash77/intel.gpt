@@ -156,7 +156,7 @@ export function LawyerList() {
             <Alert variant="destructive" className="mt-4">
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
-            </Aler t>
+            </Alert>
           )}
         </CardContent>
       </Card>
