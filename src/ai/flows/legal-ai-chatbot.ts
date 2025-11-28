@@ -49,12 +49,11 @@ Now, please provide a comprehensive and well-structured answer to the following 
 
 **USER QUERY:**
 {{query}}`,
-  model: googleAI.model('gemini-1.5-pro-latest'),
 });
 
 
 export async function* streamLegalAIChatbot(input: LegalAIChatbotInput) {
-    const {stream, response} = legalAIChatbotPrompt.stream(input);
+    const {stream, response} = legalAIChatbotPrompt.stream({ ...input, model: 'gemini-1.5-pro-latest' });
 
     for await (const chunk of stream) {
       yield chunk.text;

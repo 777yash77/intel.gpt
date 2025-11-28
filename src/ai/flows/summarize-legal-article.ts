@@ -36,7 +36,6 @@ const summarizeLegalArticlePrompt = ai.definePrompt({
 
 Document Text:
 {{{documentText}}}`,
-  model: googleAI.model('gemini-1.5-pro-latest'),
 });
 
 
@@ -47,7 +46,7 @@ const summarizeLegalArticleFlow = ai.defineFlow(
     outputSchema: SummarizeLegalArticleOutputSchema,
   },
   async input => {
-    const {output} = await summarizeLegalArticlePrompt(input);
+    const {output} = await summarizeLegalArticlePrompt({...input, model: 'gemini-1.5-pro-latest' });
     return output!;
   }
 );
