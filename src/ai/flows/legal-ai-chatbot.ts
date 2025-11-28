@@ -49,7 +49,7 @@ Now, please provide a comprehensive and well-structured answer to the following 
 
 **USER QUERY:**
 {{query}}`,
-  model: googleAI.model('gemini-pro'),
+  model: googleAI.model('gemini-1.5-pro-latest'),
 });
 
 
