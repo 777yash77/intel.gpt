@@ -13,7 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, MapPin, Phone, LocateFixed } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-import { findLawyers, type Lawyer } from '@/ai/flows/find-lawyers';
+import { findLawyers } from '@/ai/flows/find-lawyers';
+import type { Lawyer } from '@/ai/schemas/find-lawyers-schema';
 
 // A mock function to simulate reverse geocoding (coordinates to city).
 const getCityFromCoords = async (lat: number, lon: number): Promise<string> => {

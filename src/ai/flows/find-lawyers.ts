@@ -1,32 +1,18 @@
 'use server';
 /**
  * @fileOverview Finds lawyers in a given location using an AI tool.
+ * This is a "use server" file and only exports the async server action.
  *
  * - findLawyers - A function that calls the flow to find lawyers.
- * - FindLawyersInput - The input type for the findLawyers function.
- * - FindLawyersOutput - The output type for the findLawyers function.
  */
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
-import { z } from 'genkit';
-
-const FindLawyersInputSchema = z.object({
-  query: z.string().describe('The city or location to search for lawyers.'),
-});
-export type FindLawyersInput = z.infer<typeof FindLawyersInputSchema>;
-
-const LawyerSchema = z.object({
-  name: z.string().describe("The name of the lawyer or law firm."),
-  address: z.string().describe("The full address of the law office."),
-  phone: z.string().describe("The contact phone number for the lawyer or law firm.")
-});
-export type Lawyer = z.infer<typeof LawyerSchema>;
-
-const FindLawyersOutputSchema = z.object({
-  lawyers: z.array(LawyerSchema).describe("An array of lawyers found in the specified location."),
-});
-export type FindLawyersOutput = z.infer<typeof FindLawyersOutputSchema>;
+import {
+  FindLawyersInputSchema,
+  FindLawyersOutputSchema,
+  type FindLawyersInput,
+  type FindLawyersOutput,
+} from '@/ai/schemas/find-lawyers-schema';
 
 const findLawyersPrompt = ai.definePrompt({
   name: 'findLawyersPrompt',
@@ -41,7 +27,6 @@ const findLawyersPrompt = ai.definePrompt({
 
   Respond ONLY with the JSON object as defined in the output schema.`,
 });
-
 
 const findLawyersFlow = ai.defineFlow(
   {
