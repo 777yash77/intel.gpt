@@ -9,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const SummarizeLegalArticleInputSchema = z.object({
@@ -35,7 +36,7 @@ const summarizeLegalArticlePrompt = ai.definePrompt({
 
 Document Text:
 {{{documentText}}}`,
-  model: 'googleai/gemini-pro',
+  model: googleAI.model('gemini-pro'),
 });
 
 

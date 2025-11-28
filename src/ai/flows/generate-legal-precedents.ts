@@ -8,6 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const PrecedentSchema = z.object({
@@ -34,7 +35,7 @@ const generatePrecedentsPrompt = ai.definePrompt({
   name: 'generateLegalPrecedentsPrompt',
   output: { schema: GenerateLegalPrecedentsOutputSchema },
   prompt: `You are an AI legal scholar. Generate a list of four interesting and impactful legal precedents from any common law jurisdiction. For each case, provide the case name, a summary of the dispute and ruling, and a description of its impact. Do not include common cases like Marbury v. Madison, Brown v. Board of Education, or Miranda v. Arizona. Focus on cases that are less widely known but still significant.`,
-  model: 'googleai/gemini-pro',
+  model: googleAI.model('gemini-pro'),
 });
 
 const generateLegalPrecedentsFlow = ai.defineFlow(

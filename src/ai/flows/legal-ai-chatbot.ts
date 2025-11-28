@@ -10,6 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const LegalAIChatbotInputSchema = z.object({
@@ -48,7 +49,7 @@ Now, please provide a comprehensive and well-structured answer to the following 
 
 **USER QUERY:**
 {{query}}`,
-  model: 'googleai/gemini-pro',
+  model: googleAI.model('gemini-pro'),
 });
 
 
